@@ -18,9 +18,10 @@ const MSG_ERROR_401 = "No tiene permisos para realizar esta acción.";
 const ROLE_ASEGURADOR = "asegurador";
 const ROLE_ASEGURADO = "asegurado";
 
+
 usersRouter.post("/register", async (req, res) => {
   try {
-    if (!validarBody(req.body)) {
+    if (!validarBodyRegistro(req.body)) {
       return res.status(400).send({ error: MSG_ERROR_400 });
     }
     req.body.role = ROLE_ASEGURADOR;
@@ -36,47 +37,43 @@ usersRouter.post("/register", async (req, res) => {
 
 usersRouter.post("/register/client", auth, async (req, res) => {
   try {
-      const { _id, role } = req.user;
-      if (role !== ROLE_ASEGURADOR) {
-        return res.status(401).send({MSG_ERROR_401});
-      }
-
-      if (!validarBody(req.body)) {
-        return res.status(400).send({ error: MSG_ERROR_400 });
-      }
-
-      req.body.role = ROLE_ASEGURADO;
-
-      const userInserted = await addUser(req.body);
-      if (!userInserted) {
-        return res.status(409).send({ error: MSG_ERROR_409 });
-      }
-
-      const result = await addClient({idAsegurador: _id, idClient: userInserted._id });
-
-      if (!result) {
-        return res.status(409).send({ error: MSG_ERROR_409 });
-      }
-      res.status(201).send("Cliente agregado correctamente.");
-    } catch (error) {
-      res.status(500).send(error.message);
+    const { _id, role } = req.user;
+    if (role !== ROLE_ASEGURADOR) {
+      return res.status(401).send({ MSG_ERROR_401 });
     }
 
+    if (!validarBodySinPassword(req.body)) {
+      return res.status(400).send({ error: MSG_ERROR_400 });
+    }
+
+    req.body.role = ROLE_ASEGURADO;
+
+    const userInserted = await addUser(req.body);
+    if (!userInserted) {
+      return res.status(409).send({ error: MSG_ERROR_409 });
+    }
+
+    const result = await addClient({
+      idAsegurador: _id,
+      idClient: userInserted._id,
+    });
+
+    if (!result) {
+      return res.status(409).send({ error: MSG_ERROR_409 });
+    }
+    res.status(201).send("Cliente agregado correctamente.");
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 });
 
-function validarBody(body) {
-  return body.email && body.password && body.name && body.lastname && body.dni;
-}
-
-usersRouter.post("/login", async (req, res) => {
+usersRouter.get("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res
-        .status(400)
-        .send({
-          error: "Faltan campos obligatorios: se requieren email y contraseña.",
-        });
+      return res.status(400).send({
+        error: "Faltan campos obligatorios: se requieren email y contraseña.",
+      });
     }
     const user = await findByCredential(email, password);
     const token = await generateAuthToken(user);
@@ -86,16 +83,16 @@ usersRouter.post("/login", async (req, res) => {
   }
 });
 
-usersRouter.put("/edit", auth, async (req, res) => {
+/* usersRouter.put("/edit", auth, async (req, res) => {
   try {
     const result = await updateUser(req.body);
     res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error.message);
   }
-});
+}); */
 
-usersRouter.get("/:id", auth, async (req, res) => {
+/* usersRouter.get("/:id", auth, async (req, res) => {
   try {
     const result = await getUser(req.params.id);
     if (!result) {
@@ -105,6 +102,14 @@ usersRouter.get("/:id", auth, async (req, res) => {
   } catch (error) {
     res.status(500).send(error.message);
   }
-});
+}); */
+
+function validarBodyRegistro(body) {
+  return validarBodySinPassword(body) && body.password;
+}
+
+function validarBodySinPassword(body) {
+  return body.email && body.name && body.lastname;
+}
 
 export default usersRouter;

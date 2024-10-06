@@ -20,8 +20,7 @@ export async function addUser(user) {
 
   let result = null;
   if (!dniExist && !emailExist) {
-    user.password = await bcryptjs.hash(user.password, 10);
-    //user.role = "asegurado";
+    user.password = await bcryptjs.hash(user.dni, 10);
 
     result = await clientmongo
       .db(DATABASE)
