@@ -3,7 +3,7 @@ import {
   addUser,
   findByCredential,
   generateAuthToken,
- /*  getUser,
+  /*  getUser,
   updateUser, */
   addClient,
 } from "../data/user.js";
@@ -15,10 +15,10 @@ const MSG_ERROR_400 =
 const MSG_ERROR_409 =
   "El dni o el mail ya se encuentra registrado en nuestra base de datos.";
 const MSG_ERROR_401 = "No tiene permisos para realizar esta acción.";
-const MSG_ERROR_LOGIN_VACIO = "Faltan campos obligatorios: se requieren email y contraseña.";
+const MSG_ERROR_LOGIN_VACIO =
+  "Faltan campos obligatorios: se requieren email y contraseña.";
 const ROLE_ASEGURADOR = "asegurador";
 const ROLE_ASEGURADO = "asegurado";
-
 
 usersRouter.post("/register", async (req, res) => {
   try {
@@ -48,15 +48,16 @@ usersRouter.post("/register/client", auth, async (req, res) => {
     }
 
     req.body.role = ROLE_ASEGURADO;
-
+    req.body.password = req.body.dni;
     const userInserted = await addUser(req.body);
     if (!userInserted) {
       return res.status(409).send({ error: MSG_ERROR_409 });
     }
+    console.log(userInserted);
 
     const result = await addClient({
-      idAsegurador: _id,
-      idClient: userInserted._id,
+      aseguradorId: _id,
+      clienteId: userInserted.insertedId,
     });
 
     if (!result) {

@@ -1,7 +1,7 @@
 import getConnection from "./connection.js";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { ObjectId } from 'mongodb';
+import { ObjectId } from "mongodb";
 
 const DATABASE = process.env.DATABASE;
 const COLECCTION = process.env.USERS_COLECCTION;
@@ -13,14 +13,14 @@ export async function addUser(user) {
     .collection(COLECCTION)
     .findOne({ dni: user.dni });
 
-    const emailExist = await clientmongo
+  const emailExist = await clientmongo
     .db(DATABASE)
     .collection(COLECCTION)
     .findOne({ email: user.email });
 
   let result = null;
   if (!dniExist && !emailExist) {
-    user.password = await bcryptjs.hash(user.dni, 10);
+    user.password = await bcryptjs.hash(user.password, 10);
 
     result = await clientmongo
       .db(DATABASE)
@@ -90,14 +90,14 @@ export async function updateUser(user) {
   return result;
 }
 
-export async function addClient(client) {
+export async function addClient(data) {
   const clientmongo = await getConnection();
-  const query = { _id: new ObjectId(client.idAsegurador) };
-  const update = { $push: { clients: client.idClient} };
   const result = await clientmongo
     .db(DATABASE)
     .collection(COLECCTION)
-    .updateOne(query, update, { upsert: true }); 
+    .updateOne(
+      { _id: new ObjectId(data.clienteId) },
+      { $set: { asegurador: new ObjectId(data.aseguradorId) } }
+    );
   return result;
 }
-
