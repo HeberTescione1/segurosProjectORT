@@ -15,6 +15,7 @@ const MSG_ERROR_400 =
 const MSG_ERROR_409 =
   "El dni o el mail ya se encuentra registrado en nuestra base de datos.";
 const MSG_ERROR_401 = "No tiene permisos para realizar esta acción.";
+const MSG_ERROR_LOGIN_VACIO = "Faltan campos obligatorios: se requieren email y contraseña.";
 const ROLE_ASEGURADOR = "asegurador";
 const ROLE_ASEGURADO = "asegurado";
 
@@ -72,7 +73,7 @@ usersRouter.get("/login", async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
       return res.status(400).send({
-        error: "Faltan campos obligatorios: se requieren email y contraseña.",
+        error: MSG_ERROR_LOGIN_VACIO,
       });
     }
     const user = await findByCredential(email, password);
