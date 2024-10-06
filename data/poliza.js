@@ -20,7 +20,7 @@ export async function addPoliza(poliza) {
     );
     console.log(asegurado);
     if (asegurado) {
-      result = guardarPoliza(clientmongo, poliza, asegurado);
+      result = await guardarPoliza(clientmongo, poliza, asegurado);
       console.log(result);
     }
   }
