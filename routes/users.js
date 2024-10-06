@@ -3,8 +3,8 @@ import {
   addUser,
   findByCredential,
   generateAuthToken,
-  getUser,
-  updateUser,
+ /*  getUser,
+  updateUser, */
   addClient,
 } from "../data/user.js";
 import auth from "../middleware/auth.js";
