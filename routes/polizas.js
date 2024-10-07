@@ -1,5 +1,5 @@
 import express from "express";
-import { addPoliza } from "../data/poliza.js";
+import { addPoliza, getPolizas } from "../data/poliza.js";
 import auth from "../middleware/auth.js";
 
 const polizasRouter = express.Router();
@@ -26,6 +26,20 @@ polizasRouter.post("/register", auth, async (req, res) => {
       return res.status(409).send({ error: MSG_ERROR_POLIZA_EXISTE });
     }
     res.status(201).send(result);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+// Listar todas las polizas del asegurador al ingresar a la app
+polizasRouter.get("/list", auth, async (req, res) => {
+  try {
+    const { _id, role } = req.user;
+    if (role !== ROLE_ASEGURADOR) {
+      return res.status(401).send({ error: MSG_ERROR_PERMISOS });
+    }
+    const result = await getPolizas(_id);
+    res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error.message);
   }

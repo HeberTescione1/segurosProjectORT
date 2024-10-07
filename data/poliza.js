@@ -53,3 +53,12 @@ function guardarPoliza(clientmongo, poliza, asegurado) {
     .collection(COLECCTION_POLIZAS)
     .insertOne(data);
 }
+
+export async function getPolizas(aseguradorId) {
+  const clientmongo = await getConnection();
+  return clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION_POLIZAS)
+    .find({ asegurador: new ObjectId(aseguradorId) })
+    .toArray();
+}
