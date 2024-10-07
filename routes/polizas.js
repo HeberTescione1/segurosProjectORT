@@ -1,5 +1,5 @@
 import express from "express";
-import { addPoliza, getPolizas } from "../data/poliza.js";
+import { addPoliza, getPolizas, getPolizasAsegurado } from "../data/poliza.js";
 import auth from "../middleware/auth.js";
 
 const polizasRouter = express.Router();
@@ -35,10 +35,17 @@ polizasRouter.post("/register", auth, async (req, res) => {
 polizasRouter.get("/list", auth, async (req, res) => {
   try {
     const { _id, role } = req.user;
-    if (role !== ROLE_ASEGURADOR) {
-      return res.status(401).send({ error: MSG_ERROR_PERMISOS });
+    
+    let result;
+
+    if (role === ROLE_ASEGURADOR) {
+      result = await getPolizas(_id);
+    } 
+
+    else {
+      result = await getPolizasAsegurado(_id);
     }
-    const result = await getPolizas(_id);
+
     res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error.message);
