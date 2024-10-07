@@ -35,10 +35,8 @@ polizasRouter.post("/register", auth, async (req, res) => {
 polizasRouter.get("/list", auth, async (req, res) => {
   try {
     const { _id, role } = req.user;
-    if (role !== ROLE_ASEGURADOR) {
-      return res.status(401).send({ error: MSG_ERROR_PERMISOS });
-    }
-    const result = await getPolizas(_id);
+   
+    const result = await getPolizas(_id, role);
     res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error.message);

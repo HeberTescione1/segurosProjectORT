@@ -54,11 +54,15 @@ function guardarPoliza(clientmongo, poliza, asegurado) {
     .insertOne(data);
 }
 
-export async function getPolizas(aseguradorId) {
+export async function getPolizas(aseguradorId, role) {
   const clientmongo = await getConnection();
+  const query = role === "asegurador" 
+    ? { asegurador: new ObjectId(aseguradorId) } 
+    : { asegurado: new ObjectId(aseguradorId) };
   return clientmongo
     .db(DATABASE)
     .collection(COLECCTION_POLIZAS)
-    .find({ asegurador: new ObjectId(aseguradorId) })
+    .find(query)
     .toArray();
 }
+
