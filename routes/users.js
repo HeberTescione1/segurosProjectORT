@@ -69,7 +69,7 @@ usersRouter.post("/register/client", auth, async (req, res) => {
   }
 });
 
-usersRouter.get("/login", async (req, res) => {
+usersRouter.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
