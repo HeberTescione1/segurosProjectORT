@@ -6,6 +6,7 @@ import validarSolicitud from "../validaciones/validaciones.js";
 import {getSolicitudes, crearSolicitud} from "../data/solicitud.js"
 
 const MSG_ERROR_VALIDACION = "Debe especificar todos los campos.";
+const MSG_ERROR_401 = "No tiene permisos para realizar esta acción.";
 
 solicitudesRouter.get("/list", auth, async (req, res) =>{
     try {
