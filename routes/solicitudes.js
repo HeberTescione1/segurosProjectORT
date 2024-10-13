@@ -26,10 +26,7 @@ solicitudesRouter.post("/send", validarSolicitud ,async (req, res) => {
     
     try {
         const result = await crearSolicitud(req.body)
-    if (!result) {
-        return res.status(409).send({ error: MSG_ERROR_POLIZA_EXISTE });
-      }
-      res.status(201).send(result);
+        res.status(201).send(result);
     } catch (error) {
         res.status(500).send(error.message);
     }
