@@ -1,6 +1,7 @@
 import Joi from "joi";
 
 export const esquemaSolicitud = Joi.object({
+    estado: Joi.string().required(),
     daniosVehiculoAsegurado: Joi.string().required(),
     daniosVehiculoAfectado: Joi.string().required(),
     propietarioAsegurado: Joi.string().required(),
