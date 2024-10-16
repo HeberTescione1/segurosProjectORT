@@ -19,6 +19,7 @@ const MSG_ERROR_LOGIN_VACIO =
   "Faltan campos obligatorios: se requieren email y contraseña.";
 const ROLE_ASEGURADOR = "asegurador";
 const ROLE_ASEGURADO = "asegurado";
+const ROLE_ADMIN = "admin";
 
 usersRouter.post("/register", async (req, res) => {
   try {
@@ -68,6 +69,33 @@ usersRouter.post("/register/client", auth, async (req, res) => {
     res.status(500).send(error.message);
   }
 });
+
+
+usersRouter.post("/loginAdminYAsegurador", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).send({
+        error: MSG_ERROR_LOGIN_VACIO,
+      });
+    }
+
+    const user = await findByCredential(email, password);
+
+    if (user.role !== ROLE_ASEGURADOR && user.role !== ROLE_ADMIN) {
+      return res.status(403).send({
+        error: "Acceso denegado. Solo para aseguradores o administradores.",
+      });
+    }
+    const token = await generateAuthToken(user);
+    res.status(200).send({ token });
+  } catch (error) {
+        res.status(401).send(error.message);
+  }
+});
+
+
 
 usersRouter.post("/login", async (req, res) => {
   try {
