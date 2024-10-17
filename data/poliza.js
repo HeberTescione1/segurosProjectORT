@@ -18,10 +18,8 @@ export async function addPoliza(poliza) {
       clientmongo,
       poliza.dniAsegurado
     );
-    console.log(asegurado);
     if (asegurado) {
       result = await guardarPoliza(clientmongo, poliza, asegurado);
-      console.log(result);
     }
   }
 
@@ -62,7 +60,15 @@ export async function getPolizas(aseguradorId, role) {
   return clientmongo
     .db(DATABASE)
     .collection(COLECCTION_POLIZAS)
-    .find(query)
+    .find()
     .toArray();
 }
 
+export async function getPolizasAsegurado(aseguradoId) {
+  const clientmongo = await getConnection();
+  return clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION_POLIZAS)
+    .find({ asegurado: new ObjectId(aseguradoId) })
+    .toArray();
+}
