@@ -5,13 +5,37 @@ import { getUser } from "./user.js";
 const DATABASE = process.env.DATABASE;
 const COLECCTION_SOLICITUDES = process.env.SOLICITUDES_COLECCTION;
 
-export async function getSolicitudes() {
+export async function getSolicitudes(nombreConductor, fechaDesde, fechaHasta, propietarioId = null) {
     const client = await getConnection();
-  return client
-    .db(DATABASE)
-    .collection(COLECCTION_POLIZAS)
-    .find()
-    .toArray();
+    const collection = client.db(DATABASE).collection(COLECCTION_SOLICITUDES);
+    
+    const filtro = {};
+
+    if (propietarioId) {
+        const propietarioObjectId = new ObjectId(propietarioId);
+        filtro["propietarioAsegurado"] = propietarioObjectId;
+    }
+    
+    if (nombreConductor) {
+        filtro.$or = [
+            { "conductorAsegurado.datosPersona.nombreCompleto": { $regex: nombreConductor, $options: "i" } },
+            { "conductorAfectado.nombreCompleto": { $regex: nombreConductor, $options: "i" } }
+        ];
+    }
+
+    if (fechaDesde || fechaHasta) {
+        filtro["datosSiniestro.fechaOcurrencia"] = {};
+        
+        if (fechaDesde) {
+            filtro["datosSiniestro.fechaOcurrencia"] = { $gte: fechaDesde };
+        }
+        
+        if (fechaHasta) {
+            filtro["datosSiniestro.fechaOcurrencia"] = { ...filtro["datosSiniestro.fechaOcurrencia"], $lte: fechaHasta };
+        }
+    }
+
+    return collection.find(filtro).toArray();
 }
 
 export async function crearSolicitud(solicitud) {
