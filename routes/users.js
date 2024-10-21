@@ -6,6 +6,8 @@ import {
   /*  getUser,
   updateUser, */
   addClient,
+  getClientsByAsegurador,
+  deleteUser,
 } from "../data/user.js";
 import auth from "../middleware/auth.js";
 
@@ -20,6 +22,40 @@ const MSG_ERROR_LOGIN_VACIO =
 const ROLE_ASEGURADOR = "asegurador";
 const ROLE_ASEGURADO = "asegurado";
 const ROLE_ADMIN = "admin";
+
+usersRouter.delete("/:id", auth, async (req, res) => {
+  try {
+    const { role } = req.user;
+    if (role !== ROLE_ASEGURADOR) {
+      return res.status(401).send({ error: MSG_ERROR_401 });
+    }
+    const result = await deleteUser(req.params.id);
+    if (!result) {
+      return res.status(404).send({ error: "El usuario no existe." });
+    }
+    res.status(200).send(result);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+usersRouter.get("/clients", auth, async (req, res) => {
+  try {
+    const { _id, role } = req.user;
+    if (role !== ROLE_ASEGURADOR) {
+      return res.status(401).send({ error: MSG_ERROR_401 });
+    }
+
+    const { search, dni, email } = req.query; // Obtener filtros desde query params
+
+    // Obtener los clientes relacionados con el asegurador y aplicar filtros
+    const clients = await getClientsByAsegurador(_id, { search, dni, email });
+
+    res.status(200).send(clients);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
 
 usersRouter.post("/register", async (req, res) => {
   try {
@@ -54,7 +90,6 @@ usersRouter.post("/register/client", auth, async (req, res) => {
     if (!userInserted) {
       return res.status(409).send({ error: MSG_ERROR_409 });
     }
-    console.log(userInserted);
 
     const result = await addClient({
       aseguradorId: _id,
@@ -69,7 +104,6 @@ usersRouter.post("/register/client", auth, async (req, res) => {
     res.status(500).send(error.message);
   }
 });
-
 
 usersRouter.post("/loginAdminYAsegurador", async (req, res) => {
   try {
@@ -91,11 +125,9 @@ usersRouter.post("/loginAdminYAsegurador", async (req, res) => {
     const token = await generateAuthToken(user);
     res.status(200).send({ token });
   } catch (error) {
-        res.status(401).send(error.message);
+    res.status(401).send(error.message);
   }
 });
-
-
 
 usersRouter.post("/login", async (req, res) => {
   try {

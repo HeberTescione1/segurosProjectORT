@@ -12,16 +12,13 @@ export async function addPoliza(poliza) {
     clientmongo,
     poliza.dniAsegurado
   );
-  console.log(polizaExist);
   if (!polizaExist) {
     const asegurado = await buscarAseguradoPorDni(
       clientmongo,
       poliza.dniAsegurado
     );
-    console.log(asegurado);
     if (asegurado) {
       result = await guardarPoliza(clientmongo, poliza, asegurado);
-      console.log(result);
     }
   }
 
