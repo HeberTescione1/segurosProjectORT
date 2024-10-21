@@ -44,6 +44,7 @@ function guardarPoliza(clientmongo, poliza, asegurado) {
   const data = {
     asegurado: new ObjectId(asegurado._id),
     asegurador: new ObjectId(poliza.aseguradorId),
+    dominio: poliza.vehiculo.dominio,
     tipoCobertura : poliza.tipoCobertura,
     aseguradora: poliza.aseguradora,
     primaSegura: poliza.primaSegura,
