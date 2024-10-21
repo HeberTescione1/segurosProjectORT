@@ -69,3 +69,23 @@ export async function getPolizasAsegurado(aseguradoId) {
     .find({ asegurado: new ObjectId(aseguradoId) })
     .toArray();
 }
+
+export async function getPoliza(_id) {
+  const clientmongo = await getConnection();
+  return clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION_POLIZAS)
+    .findOne({ _id: new ObjectId(_id) });
+}
+
+export async function getPolizaAsegurado(idUser, idPoliza) {
+  const poliza = await getPoliza(idPoliza);
+
+  if(!poliza){
+    throw new Error('La poliza no existe.')
+  }else if (poliza.asegurado.toString() !== idUser) {
+    throw new Error('El usuario no tiene esa poliza.')
+  }
+  
+  return poliza
+}
