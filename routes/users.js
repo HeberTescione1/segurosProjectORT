@@ -6,6 +6,7 @@ import {
   /*  getUser,
   updateUser, */
   addClient,
+  getUserByToken
 } from "../data/user.js";
 import auth from "../middleware/auth.js";
 
@@ -19,6 +20,18 @@ const MSG_ERROR_LOGIN_VACIO =
   "Faltan campos obligatorios: se requieren email y contraseña.";
 const ROLE_ASEGURADOR = "asegurador";
 const ROLE_ASEGURADO = "asegurado";
+
+usersRouter.get("/getInfoByToken", async (req, res) => {
+  try {
+    //TODO VALIDAR QUE EL USER EXISTA
+        
+    const result = await getUserByToken(req.body.token)
+
+    res.status(200).send(result);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
 
 usersRouter.post("/register", async (req, res) => {
   try {
