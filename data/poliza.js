@@ -42,9 +42,21 @@ function buscarAseguradoPorDni(clientmongo, dni) {
 
 function guardarPoliza(clientmongo, poliza, asegurado) {
   const data = {
-    dominio: poliza.dominio,
     asegurado: new ObjectId(asegurado._id),
     asegurador: new ObjectId(poliza.aseguradorId),
+    tipoCobertura : poliza.tipoCobertura,
+    aseguradora: poliza.aseguradora,
+    primaSegura: poliza.primaSegura,
+    deducible: poliza.deducible,
+    vehiculo: {
+        numeroIdentificador: poliza.vehiculo.numeroIdentificador,
+        marca: poliza.vehiculo.marca,
+        modelo: poliza.vehiculo.modelo,
+        anio: poliza.vehiculo.anio,
+        dominio: poliza.vehiculo.dominio,
+        color: poliza.vehiculo.color,
+        tipoVehiculo: poliza.vehiculo.tipoVehiculo
+    }
   };
   return clientmongo
     .db(DATABASE)
