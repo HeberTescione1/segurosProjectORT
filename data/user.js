@@ -101,3 +101,47 @@ export async function addClient(data) {
     );
   return result;
 }
+
+export async function getClientsByAsegurador(aseguradorId, { search, dni, email }) {
+  const clientmongo = await getConnection();
+
+  // Crear el filtro base por asegurador y rol "asegurado"
+  let query = { asegurador: new ObjectId(aseguradorId), role: "asegurado" };
+
+  // Aplicar filtros condicionalmente
+  if (search) {
+    // Filtro por nombre y apellido juntos (usamos una expresión regular para hacer una búsqueda más flexible)
+    query.$or = [
+      { name: { $regex: search, $options: "i" } }, // "i" hace que la búsqueda no sea sensible a mayúsculas
+      { lastname: { $regex: search, $options: "i" } }
+    ];
+  }
+
+  if (dni) {
+    // Filtro por DNI
+    query.dni = dni;
+  }
+
+  if (email) {
+    // Filtro por email
+    query.email = email;
+  }
+
+  // Buscar clientes relacionados con el asegurador y los filtros aplicados
+  const clients = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION)
+    .find(query)
+    .toArray();
+
+  return clients;
+}
+
+export async function deleteUser(id) {
+  const clientmongo = await getConnection();
+  const result = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION)
+    .deleteOne({ _id: new ObjectId(id) });
+  return result;
+}
