@@ -53,7 +53,7 @@ polizasRouter.get("/list", auth, async (req, res) => {
 });
 
 function validarBodyRegistro(body) {
-  return body.dniAsegurado && body.dominio;
+  return body.dniAsegurado && body.vehiculo.dominio;
 }
 
 export default polizasRouter;
