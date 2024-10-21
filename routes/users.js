@@ -21,7 +21,7 @@ const MSG_ERROR_LOGIN_VACIO =
 const ROLE_ASEGURADOR = "asegurador";
 const ROLE_ASEGURADO = "asegurado";
 
-usersRouter.get("/getInfoByToken", async (req, res) => {
+usersRouter.post("/getInfoByToken", async (req, res) => {
   try {
     //TODO VALIDAR QUE EL USER EXISTA
         
