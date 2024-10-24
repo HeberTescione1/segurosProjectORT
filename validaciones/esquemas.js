@@ -18,18 +18,16 @@ const esquemaLugarAsistencia = Joi.object({
 })
 
 const esquemaVehiculo = Joi.object({
-    numeroIdentificador: Joi.string().required(),
     marca: Joi.string().required(),
     modelo: Joi.string().required(),
     tipoVehiculo: Joi.string().valid('AUTO', 'MOTO', 'CAMION').required(),
+    color: Joi.string().required(),
     anio: Joi.number().integer().required(),
-    dominio: Joi.string().required(),
-    idAsegurado: Joi.number().integer().required(),
-    color: Joi.string().required()
+    dominio: Joi.string().required()
 });
 
 const esquemaVehiculoTercero = Joi.object({
-    esquemaVehiculo: esquemaVehiculo,
+    datosVehiculo: esquemaVehiculo,
     aseguradora: Joi.string().required(),
     poliza: Joi.string().required(),
     fechaVencimiento: Joi.date().required()
@@ -39,7 +37,7 @@ const esquemaPersona = Joi.object({
     nombre: Joi.string().required(),
     apellido: Joi.string().required(),
     nombreCompleto: Joi.string().required(),
-    cuit: Joi.string().required(),
+    cuit: Joi.number().required(),
     email: Joi.string().email().required(),
     telefono: Joi.number().integer().required(),
     fechaDeNacimiento: Joi.date().required(),
@@ -58,16 +56,41 @@ const esquemaConductorAsegurado = Joi.object({
 
 const esquemaPropietarioAfectado = Joi.object({
     datosPersona: esquemaPersona.required(),
-    vehiculoPropietadoAfectado: esquemaVehiculoTercero.required()
+    vehiculoPropietadoAfectado: esquemaVehiculoTercero.required(),
+    fechaVencimientoPoliza: Joi.date().required()
+})
+
+const esquemaLesionado = Joi.object({
+    datosPersona : esquemaPersona.required(),
+    estadoCivil: Joi.string().required(),
+    telefonoAlternativo: Joi.number().required()
 })
 
 const esquemaLesiones = Joi.object({
-    lesionado: esquemaPersona.required(),
+    lesionado: esquemaLesionado.required(),
     peatonOCiclista: Joi.boolean().required(),
     conductorTercero: Joi.boolean().required(),
     ocupanteTercero: Joi.boolean().required(),
+
+    conductorAsegurado: Joi.boolean().required(),
     asegurado: Joi.boolean().required(),
-    conductorAsegurado: Joi.boolean().required()
+    conductor: Joi.boolean().required(),
+    propietarioVehiculoAsegurado: Joi.boolean().required(),
+    realacionConPropietario: Joi.boolean().required() 
+    
+})
+
+const esquemaConsecuenciaSiniestro = Joi.object({
+    danioParcial: Joi.boolean().required(),
+    roboRueda: Joi.boolean().required(),
+    roboParcial: Joi.boolean().required(),
+    danioTerceros: Joi.boolean().required(),
+    incendioTotal: Joi.boolean().required(),
+    otros: Joi.boolean().required(),
+    destruccionTotal: Joi.boolean().required(),
+    roboTotal: Joi.boolean().required(),
+    roturaCristales: Joi.boolean().required(),
+    incendioParcial: Joi.boolean().required(),
 })
 
 const esquemaDatosSiniestro = Joi.object({
@@ -95,18 +118,25 @@ const esquemaDatosSiniestro = Joi.object({
     estadoTiempo: Joi.string().valid('SECO', 'LLUVIA', 'NIEBLA', ' GRANIZO', 'NIEVE').required(),
     estadoCamino: Joi.string().valid('BUENO', 'MALO', 'REGULAR').required(),
     tipoCamino: Joi.string().valid('ASFALTO', 'EMPEDRADO', 'RIPIO', 'TIERRA').required(),
-    consecuenciaSiniestro: Joi.string().valid(
-        'DANIO_PARCIAL',
-        'ROBO_RUEDA',
-        'ROBO_PARCIAL',
-        'DAÑO_TERCEROS',
-        'INCENDIO_TOTAL',
-        'OTROS',
-        'DESTRUCCION_TOTAL',
-        'ROBO_TOTAL',
-        'ROTURA_CRISTALES',
-        'INCENCIO_PARCIAL',
-    ).required()
+    consecuenciaSiniestro: esquemaConsecuenciaSiniestro.required(),
+    observaciones: Joi.string().required(),
+    relato: Joi.string().required()
+})
+
+const esquemaConductorAfectado = Joi.object({
+    datosPersona: esquemaPersona.required(),
+    fechaRegistroExpedicion: Joi.date().required(),
+    fechaRegistroVencimiento: Joi.date().required()
+})
+
+const esquemaVehiculoPropietario = Joi.object({
+    datosVehiculo: esquemaVehiculo.required(),
+    usoDelVehiculo: Joi.string().valid('PARTICULAR', 'COMERCIAL')
+})
+
+const esquemaPropietarioAsegurado = Joi.object({
+    datosPersona: esquemaPersona.required(),
+    vehiculo: esquemaVehiculoPropietario.required()
 })
 
 export const esquemaSolicitud = Joi.object({
@@ -116,7 +146,8 @@ export const esquemaSolicitud = Joi.object({
     idPropietarioAsegurado: Joi.string().required(),
     conductorAsegurado: esquemaConductorAsegurado.required(),
     propietarioAfectado: esquemaPropietarioAfectado.required(),
-    conductorAfectado: esquemaPersona.required(),
+    conductorAfectado: esquemaConductorAfectado.required(),
+    propietarioAsegurado: esquemaPropietarioAsegurado.required(),
     lesiones: esquemaLesiones.required(),
     datosSiniestro: esquemaDatosSiniestro.required()
 });

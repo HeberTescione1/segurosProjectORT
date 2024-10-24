@@ -29,6 +29,8 @@ solicitudesRouter.post("/send", validarSolicitud ,async (req, res) => {
         const result = await crearSolicitud(req.body)
         res.status(201).send(result);
     } catch (error) {
+        console.log(error.message);
+        
         res.status(500).send(error.message);
     }
 })
