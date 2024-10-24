@@ -6,6 +6,15 @@ import { ObjectId } from "mongodb";
 const DATABASE = process.env.DATABASE;
 const COLECCTION = process.env.USERS_COLECCTION;
 
+export async function getUserByToken(token) {
+  const info = jwt.decode(token);
+
+  const {_id} = info
+
+  const result = getUser(_id)
+  return result;
+}
+
 export async function addUser(user) {
   const clientmongo = await getConnection();
   const dniExist = await clientmongo
