@@ -3,11 +3,11 @@ import Joi from "joi";
 
 
 export const esquemaDomicilio = Joi.object({
-    calle: Joi.string().required(),
-    localidad: Joi.string().required(),
-    codigoPostal: Joi.number().required(),
-    provincia: Joi.string().required(),
-    pais: Joi.string().required()
+    address: Joi.string().required(),
+    locality: Joi.string().required(),
+    zip_code: Joi.number().required(),
+    province: Joi.string().required(),
+    country: Joi.string().required()
 })
 
 const esquemaLugarAsistencia = Joi.object({
@@ -29,8 +29,7 @@ const esquemaVehiculo = Joi.object({
 const esquemaVehiculoTercero = Joi.object({
     datosVehiculo: esquemaVehiculo,
     aseguradora: Joi.string().required(),
-    poliza: Joi.string().required(),
-    fechaVencimiento: Joi.date().required()
+    poliza: Joi.string().required()
 });
 
 const esquemaPersona = Joi.object({
@@ -49,9 +48,9 @@ const esquemaConductorAsegurado = Joi.object({
     datosPersona: esquemaPersona.required(),
     nroRegistro: Joi.string().required(),
     claseRegistro: Joi.string().required(),
+    fechaRegistroExpedicion: Joi.date().required(),
+    fechaRegistroVencimiento: Joi.date().required(),
     relacionAsegurado: Joi.string().required(),
-    fechaExpedicion: Joi.date().required(),
-    fechaVencimiento: Joi.date().required(),
 })
 
 const esquemaPropietarioAfectado = Joi.object({
@@ -76,7 +75,7 @@ const esquemaLesiones = Joi.object({
     asegurado: Joi.boolean().required(),
     conductor: Joi.boolean().required(),
     propietarioVehiculoAsegurado: Joi.boolean().required(),
-    realacionConPropietario: Joi.boolean().required() 
+    relacionConPropietario: Joi.boolean().required() 
     
 })
 
@@ -125,8 +124,11 @@ const esquemaDatosSiniestro = Joi.object({
 
 const esquemaConductorAfectado = Joi.object({
     datosPersona: esquemaPersona.required(),
+    nroRegistro: Joi.string().required(),
+    claseRegistro: Joi.string().required(),
     fechaRegistroExpedicion: Joi.date().required(),
-    fechaRegistroVencimiento: Joi.date().required()
+    fechaRegistroVencimiento: Joi.date().required(),
+    relacionAsegurado: Joi.string().required(),
 })
 
 const esquemaVehiculoPropietario = Joi.object({

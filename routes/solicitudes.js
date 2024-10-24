@@ -23,7 +23,10 @@ solicitudesRouter.get("/list", auth, async (req, res) =>{
     }
 })
 
-solicitudesRouter.post("/send", validarSolicitud ,async (req, res) => {
+solicitudesRouter.post("/send", 
+    validarSolicitud ,
+    async (req, res) => {
+    //console.log(req.body);
     
     try {
         const result = await crearSolicitud(req.body)

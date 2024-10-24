@@ -18,29 +18,10 @@ export async function crearSolicitud(solicitud) {
     let result = null;
     const client = await getConnection();
     //TODO VALIDAR QUE LA SOLICITUD NO EXISTA
-    //const result = 
 
-    result = await guardarSolicitud(client, solicitud)
-
-    return result;
-}
-
-async function guardarSolicitud(client, solicitud){
-    const asegurado = await getUser(solicitud.propietarioAsegurado)
-    const data ={
-        daniosVehiculoAsegurado: solicitud.daniosVehiculoAsegurado,
-        daniosVehiculoAfectado: solicitud.daniosVehiculoAfectado,
-        propietarioAsegurado: asegurado,
-        conductorAsegurado: solicitud.conductorAsegurado,
-        propietarioAfectado: solicitud.propietarioAfectado,
-        conductorAfectado: solicitud.conductorAfectado,
-        lesiones: solicitud.lesiones,
-        datosSiniestro: solicitud.datosSiniestro
-    }
-    
     return client
     .db(DATABASE)
     .collection(COLECCTION_SOLICITUDES)
-    .insertOne(data);
+    .insertOne(solicitud);
 }
 
