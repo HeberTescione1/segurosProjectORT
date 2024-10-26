@@ -10,12 +10,11 @@ const COLECCTION = process.env.USERS_COLECCTION;
 export async function getUserById(id) {
   const client = await getConnection();
   const user = await client
-  .db(DATABASE)
-  .collection(COLECCTION)
-  .findOne({ _id: new ObjectId(id) });
+    .db(DATABASE)
+    .collection(COLECCTION)
+    .findOne({ _id: new ObjectId(id) });
   return user;
 }
-
 
 export async function addUser(user) {
   const clientmongo = await getConnection();
@@ -85,10 +84,13 @@ export async function checkDuplicateEmailOrDni(userId, email, dni) {
   const clientmongo = await getConnection();
   const query = {
     $or: [{ email }, { dni }],
-    _id: { $ne: new ObjectId(userId) } // Excluir el usuario actual
+    _id: { $ne: new ObjectId(userId) }, // Excluir el usuario actual
   };
 
-  const user = await clientmongo.db(DATABASE).collection(COLECCTION).findOne(query);
+  const user = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION)
+    .findOne(query);
   return !!user;
 }
 
@@ -130,7 +132,10 @@ export async function addClient(data) {
   return result;
 }
 
-export async function getClientsByAsegurador(aseguradorId, { search, dni, email, phone, cuit }) {
+export async function getClientsByAsegurador(
+  aseguradorId,
+  { search, dni, email, phone, cuit }
+) {
   const clientmongo = await getConnection();
 
   // Crear el filtro base por asegurador y rol "asegurado"
@@ -140,7 +145,7 @@ export async function getClientsByAsegurador(aseguradorId, { search, dni, email,
   if (search) {
     query.$or = [
       { name: { $regex: search, $options: "i" } },
-      { lastname: { $regex: search, $options: "i" } }
+      { lastname: { $regex: search, $options: "i" } },
     ];
   }
 
@@ -159,14 +164,12 @@ export async function getClientsByAsegurador(aseguradorId, { search, dni, email,
   if (cuit) {
     query.cuit = cuit;
   }
-
   // Buscar clientes relacionados con el asegurador y los filtros aplicados
   const clients = await clientmongo
     .db(DATABASE)
     .collection(COLECCTION)
     .find(query)
     .toArray();
-
   return clients;
 }
 
