@@ -1,5 +1,5 @@
 import express from "express";
-import { addPoliza, getPolizas } from "../data/poliza.js";
+import { addPoliza, getPolizas, getPolizasAsegurado } from "../data/poliza.js";
 import auth from "../middleware/auth.js";
 
 const polizasRouter = express.Router();
@@ -35,8 +35,9 @@ polizasRouter.post("/register", auth, async (req, res) => {
 polizasRouter.get("/list", auth, async (req, res) => {
   try {
     const { _id, role } = req.user;
-   
+  
     const result = await getPolizas(_id, role);
+    
     res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error.message);
@@ -44,7 +45,7 @@ polizasRouter.get("/list", auth, async (req, res) => {
 });
 
 function validarBodyRegistro(body) {
-  return body.dniAsegurado && body.dominio;
+  return body.dniAsegurado && body.vehiculo.dominio;
 }
 
 export default polizasRouter;
