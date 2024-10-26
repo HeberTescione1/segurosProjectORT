@@ -188,14 +188,12 @@ export async function getClientsByAsegurador(
   if (cuit) {
     query.cuit = cuit;
   }
-
   // Buscar clientes relacionados con el asegurador y los filtros aplicados
   const clients = await clientmongo
     .db(DATABASE)
     .collection(COLECCTION)
     .find(query)
     .toArray();
-
   return clients;
 }
 
