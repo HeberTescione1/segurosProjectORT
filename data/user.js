@@ -10,12 +10,11 @@ const COLECCTION = process.env.USERS_COLECCTION;
 export async function getUserById(id) {
   const client = await getConnection();
   const user = await client
-  .db(DATABASE)
-  .collection(COLECCTION)
-  .findOne({ _id: new ObjectId(id) });
+    .db(DATABASE)
+    .collection(COLECCTION)
+    .findOne({ _id: new ObjectId(id) });
   return user;
 }
-
 
 export async function addUser(user) {
   const clientmongo = await getConnection();
@@ -66,7 +65,7 @@ export async function generateAuthToken(user) {
   const token = await jwt.sign(
     { _id: user._id, email: user.email, role: user.role },
     process.env.CLAVE_SECRETA,
-    { expiresIn: "1h" }
+    { expiresIn: "4h" }
   );
   return token;
 }
@@ -85,32 +84,58 @@ export async function checkDuplicateEmailOrDni(userId, email, dni) {
   const clientmongo = await getConnection();
   const query = {
     $or: [{ email }, { dni }],
-    _id: { $ne: new ObjectId(userId) } // Excluir el usuario actual
+    _id: { $ne: new ObjectId(userId) }, // Excluir el usuario actual
   };
 
-  const user = await clientmongo.db(DATABASE).collection(COLECCTION).findOne(query);
+  const user = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION)
+    .findOne(query);
   return !!user;
 }
 
 export async function updateUser(id, user) {
   const clientmongo = await getConnection();
   const query = { _id: new ObjectId(id) };
+
+  console.log("UpdateUser - Query:", query);
+  console.log("UpdateUser - User object:", user);
+  console.log("UpdateUser - ID:", id);
+  console.log("UpdateUser - EMAIL:", user.email);
+  console.log("UpdateUser - NAME:", user.name);
+  console.log("UpdateUser - LASTNAME:", user.lastname);
+  console.log("UpdateUser - DNI:", user.dni);
+  console.log("UpdateUser - PHONE:", user.phone);
+  console.log("UpdateUser - CUIT:", user.cuit);
+
+  // Verifica la existencia de user.domicilio antes de acceder a sus propiedades
+  if (user.domicile) {
+    console.log("UpdateUser - DOMICILIO - ADDRESS:", user.domicile.address);
+    console.log("UpdateUser - DOMICILIO - ZIP_CODE:", user.domicile.zip_code);
+    console.log("UpdateUser - DOMICILIO - PROVINCE:", user.domicile.province);
+    console.log("UpdateUser - DOMICILIO - COUNTRY:", user.domicile.country);
+  } else {
+    console.log(
+      "UpdateUser - DOMICILIO: El campo `domicilio` no está definido."
+    );
+  }
+
   const newValues = {
     $set: {
       email: user.email,
-      nombre: user.name,
-      apellido: user.lastname,
+      name: user.name,
+      lastname: user.lastname,
       dni: user.dni,
       phone: user.phone,
       cuit: user.cuit,
-      domicilio: {
-        address: user.domicilio.address,
-        zip_code: user.domicilio.zip_code,
-        province: user.domicilio.province,
-        country: user.domicilio.country,
-      },
+      "domicile.address": user.domicile.address,
+      "domicile.zip_code": user.domicile.zip_code,
+      "domicile.province": user.domicile.province,
+      "domicile.country": user.domicile.country,
     },
   };
+
+  console.log("UpdateUser - New Values:", newValues);
 
   const result = await clientmongo
     .db(DATABASE)
@@ -118,6 +143,7 @@ export async function updateUser(id, user) {
     .updateOne(query, newValues);
   return result.modifiedCount > 0; // Verifica si se modificó algún documento
 }
+
 export async function addClient(data) {
   const clientmongo = await getConnection();
   const result = await clientmongo
@@ -130,7 +156,10 @@ export async function addClient(data) {
   return result;
 }
 
-export async function getClientsByAsegurador(aseguradorId, { search, dni, email, phone, cuit }) {
+export async function getClientsByAsegurador(
+  aseguradorId,
+  { search, dni, email, phone, cuit }
+) {
   const clientmongo = await getConnection();
 
   // Crear el filtro base por asegurador y rol "asegurado"
@@ -140,7 +169,7 @@ export async function getClientsByAsegurador(aseguradorId, { search, dni, email,
   if (search) {
     query.$or = [
       { name: { $regex: search, $options: "i" } },
-      { lastname: { $regex: search, $options: "i" } }
+      { lastname: { $regex: search, $options: "i" } },
     ];
   }
 
