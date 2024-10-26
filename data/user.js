@@ -65,7 +65,7 @@ export async function generateAuthToken(user) {
   const token = await jwt.sign(
     { _id: user._id, email: user.email, role: user.role },
     process.env.CLAVE_SECRETA,
-    { expiresIn: "4h" }
+    { expiresIn: "1h" }
   );
   return token;
 }
@@ -108,17 +108,12 @@ export async function updateUser(id, user) {
   console.log("UpdateUser - PHONE:", user.phone);
   console.log("UpdateUser - CUIT:", user.cuit);
 
-  // Verifica la existencia de user.domicilio antes de acceder a sus propiedades
-  if (user.domicile) {
-    console.log("UpdateUser - DOMICILIO - ADDRESS:", user.domicile.address);
-    console.log("UpdateUser - DOMICILIO - ZIP_CODE:", user.domicile.zip_code);
-    console.log("UpdateUser - DOMICILIO - PROVINCE:", user.domicile.province);
-    console.log("UpdateUser - DOMICILIO - COUNTRY:", user.domicile.country);
-  } else {
-    console.log(
-      "UpdateUser - DOMICILIO: El campo `domicilio` no está definido."
-    );
-  }
+  console.log("--------------------");  
+  console.log("UpdateUser - DOMICILIO - ADDRESS:", user.domicile.address);
+  console.log("UpdateUser - DOMICILIO - ZIP_CODE:", user.domicile.zip_code);
+  console.log("UpdateUser - DOMICILIO - PROVINCE:", user.domicile.province);
+  console.log("UpdateUser - DOMICILIO - COUNTRY:", user.domicile.country);
+  console.log("--------------------");
 
   const newValues = {
     $set: {
@@ -128,10 +123,12 @@ export async function updateUser(id, user) {
       dni: user.dni,
       phone: user.phone,
       cuit: user.cuit,
-      "domicile.address": user.domicile.address,
-      "domicile.zip_code": user.domicile.zip_code,
-      "domicile.province": user.domicile.province,
-      "domicile.country": user.domicile.country,
+      domicile: {
+        address: user.address,
+        zip_code: user.zip_code,
+        province: user.province,
+        country: user.country,
+      },
     },
   };
 
@@ -188,12 +185,14 @@ export async function getClientsByAsegurador(
   if (cuit) {
     query.cuit = cuit;
   }
+
   // Buscar clientes relacionados con el asegurador y los filtros aplicados
   const clients = await clientmongo
     .db(DATABASE)
     .collection(COLECCTION)
     .find(query)
     .toArray();
+
   return clients;
 }
 
