@@ -1,5 +1,5 @@
 import express from "express";
-import { addPoliza, getPolizas, getPolizasAsegurado } from "../data/poliza.js";
+import { addPoliza, getPolizas,} from "../data/poliza.js";
 import auth from "../middleware/auth.js";
 
 const polizasRouter = express.Router();
