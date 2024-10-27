@@ -75,14 +75,14 @@ export async function getUser(id) {
   const user = await clientmongo
     .db(DATABASE)
     .collection(COLECCTION)
-    .findOne({ _id: new ObjectId(id) });
+    .findOne({ _id: new ObjectId.createFromTime(id) });
 
   return user;
 }
 
 export async function updateUser(user) {
   const clientmongo = await getConnection();
-  const query = { _id: new ObjectId(user._id) };
+  const query = { _id: new ObjectId.createFromTime(user._id) };
   const newValues = {
     $set: {
       mail: user.mail,
@@ -105,8 +105,8 @@ export async function addClient(data) {
     .db(DATABASE)
     .collection(COLECCTION)
     .updateOne(
-      { _id: new ObjectId(data.clienteId) },
-      { $set: { asegurador: new ObjectId(data.aseguradorId) } }
+      { _id: new ObjectId.createFromTime(data.clienteId) },
+      { $set: { asegurador: new ObjectId.createFromTime(data.aseguradorId) } }
     );
   return result;
 }
@@ -115,7 +115,7 @@ export async function getClientsByAsegurador(aseguradorId, { search, dni, email 
   const clientmongo = await getConnection();
 
   // Crear el filtro base por asegurador y rol "asegurado"
-  let query = { asegurador: new ObjectId(aseguradorId), role: "asegurado" };
+  let query = { asegurador: new ObjectId.createFromTime(aseguradorId), role: "asegurado" };
 
   // Aplicar filtros condicionalmente
   if (search) {
@@ -151,6 +151,6 @@ export async function deleteUser(id) {
   const result = await clientmongo
     .db(DATABASE)
     .collection(COLECCTION)
-    .deleteOne({ _id: new ObjectId(id) });
+    .deleteOne({ _id: new ObjectId.createFromTime(id) });
   return result;
 }
