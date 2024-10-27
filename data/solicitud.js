@@ -9,7 +9,7 @@ export async function getSolicitudes() {
     const client = await getConnection();
   return client
     .db(DATABASE)
-    .collection(COLECCTION_POLIZAS)
+    .collection(COLECCTION_SOLICITUDES)
     .find()
     .toArray();
 }
