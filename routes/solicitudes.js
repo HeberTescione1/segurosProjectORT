@@ -9,22 +9,16 @@ const MSG_ERROR_VALIDACION = "Debe especificar todos los campos.";
 const MSG_ERROR_401 = "No tiene permisos para realizar esta acción.";
 const ROLE_ASEGURADOR = "asegurado"
 
-solicitudesRouter.get("/list", auth, async (req, res) =>{
-    const { _id, role } = req.user;
-    if (role !== ROLE_ASEGURADOR) {
-        return res.status(401).send({ MSG_ERROR_401 });
-        
-    }else{
-        try {
-            const result = await getSolicitudes()
-            console.log(result);
-            res.status(200).send(result)
+solicitudesRouter.post("/list", auth, async (req, res) =>{
+    try {
+        const { _id, role } = req.user;
+        const result = await getSolicitudes(_id, role)
+        console.log(result);
+        res.status(200).send(result)
             
-        } catch (error) {
-            res.status(500).send(error.message);
-        }
+    } catch (error) {
+        res.status(500).send(error.message);
     }
-    
 })
 
 solicitudesRouter.post("/send", 

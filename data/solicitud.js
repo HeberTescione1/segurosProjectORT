@@ -5,13 +5,18 @@ import { getUser } from "./user.js";
 const DATABASE = process.env.DATABASE;
 const COLECCTION_SOLICITUDES = process.env.SOLICITUDES_COLECCTION;
 
-export async function getSolicitudes() {
+export async function getSolicitudes(_id, role) {
+  console.log(_id);
+  
     const client = await getConnection();
+    const query = role === "asegurador" 
+    ? { idAsegurador: _id } 
+    : { idAsegurado: _id };
   return client
     .db(DATABASE)
     .collection(COLECCTION_SOLICITUDES)
-    .find()
-    .toArray();
+    .find(query)
+    .toArray({});
 }
 
 export async function crearSolicitud(solicitud) {
