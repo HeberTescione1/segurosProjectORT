@@ -3,6 +3,7 @@ import express from "express";
 import  cors from "cors";
 import usersRouter from "./routes/users.js";
 import polizasRouter from "./routes/polizas.js";
+import solicitudesRouter from "./routes/solicitudes.js"
 import testRouter from "./routes/test.js";
 import solicitudesRouter from "./routes/solicitudes.js"
 
@@ -12,6 +13,7 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/users", usersRouter);
 app.use("/api/polizas", polizasRouter);
+app.use("/api/solicitudes", solicitudesRouter)
 app.use("/api/test", testRouter);
 app.use("/api/solicitudes", solicitudesRouter);
 

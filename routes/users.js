@@ -6,6 +6,7 @@ import {
   getUserById,
   updateUser,
   addClient,
+  getUserByToken,
   getClientsByAsegurador,
   checkDuplicateEmailOrDni,
   deleteUser,
@@ -93,6 +94,18 @@ usersRouter.get("/clients", auth, async (req, res) => {
     const clients = await getClientsByAsegurador(_id, { search, dni, email, phone, cuit });
 
     res.status(200).send(clients);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+usersRouter.post("/getInfoByToken", async (req, res) => {
+  try {
+    //TODO VALIDAR QUE EL USER EXISTA
+        
+    const result = await getUserByToken(req.body.token)
+
+    res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error.message);
   }

@@ -72,15 +72,7 @@ export async function getPolizas(aseguradorId, role) {
   return clientmongo
     .db(DATABASE)
     .collection(COLECCTION_POLIZAS)
-    .find()
+    .find(query)
     .toArray();
 }
 
-export async function getPolizasAsegurado(aseguradoId) {
-  const clientmongo = await getConnection();
-  return clientmongo
-    .db(DATABASE)
-    .collection(COLECCTION_POLIZAS)
-    .find({ asegurado: new ObjectId(aseguradoId) })
-    .toArray();
-}

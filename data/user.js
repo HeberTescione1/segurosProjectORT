@@ -7,15 +7,14 @@ import { ObjectId } from "mongodb";
 const DATABASE = process.env.DATABASE;
 const COLECCTION = process.env.USERS_COLECCTION;
 
-export async function getUserById(id) {
-  const client = await getConnection();
-  const user = await client
-  .db(DATABASE)
-  .collection(COLECCTION)
-  .findOne({ _id: new ObjectId(id) });
-  return user;
-}
+export async function getUserByToken(token) {
+  const info = jwt.decode(token);
 
+  const {_id} = info
+
+  const result = getUser(_id)
+  return result;
+}
 
 export async function addUser(user) {
   const clientmongo = await getConnection();

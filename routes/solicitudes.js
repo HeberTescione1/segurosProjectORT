@@ -5,39 +5,33 @@ import validarSolicitud from "../validaciones/validaciones.js";
 
 import {getSolicitudes, crearSolicitud} from "../data/solicitud.js"
 
-const ROLE_ASEGURADOR = "asegurador"
-const ROLE_ASEGURADO = "asegurado"
-
 const MSG_ERROR_VALIDACION = "Debe especificar todos los campos.";
 const MSG_ERROR_401 = "No tiene permisos para realizar esta acción.";
+const ROLE_ASEGURADOR = "asegurado"
 
-solicitudesRouter.get("/list", auth, async (req, res) => {
+solicitudesRouter.get("/list", auth, async (req, res) =>{
     try {
-        const { _id, role } = req.user;  // _id se toma del usuario autenticado
-        const { nombreConductor, fechaDesde, fechaHasta } = req.query;
-        let result;
-        
-        if (role === ROLE_ASEGURADOR) {
-            result = await getSolicitudes(nombreConductor, fechaDesde, fechaHasta);
-        } else if (role === ROLE_ASEGURADO) {
-            result = await getSolicitudes(nombreConductor, fechaDesde, fechaHasta, _id);
-        } else {
-            return res.status(401).send({ MSG_ERROR_401 });
-        }
-
-        res.status(200).send(result);
-
+        const { _id, role } = req.user;
+        const result = await getSolicitudes(_id, role)
+        console.log(result);
+        res.status(200).send(result)
+            
     } catch (error) {
         res.status(500).send(error.message);
     }
-});
+})
 
-solicitudesRouter.post("/send", validarSolicitud ,async (req, res) => {
+solicitudesRouter.post("/send", 
+    validarSolicitud ,
+    async (req, res) => {
+    //console.log(req.body);
     
     try {
         const result = await crearSolicitud(req.body)
-        res.status(201).send(result);
+        res.status(201).send(result);    
     } catch (error) {
+        console.log(error.message);
+        
         res.status(500).send(error.message);
     }
 })
