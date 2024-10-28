@@ -52,8 +52,32 @@ polizasRouter.get("/list", auth, async (req, res) => {
   }
 });
 
+//Listar todas las polizas del asegurado
+polizasRouter.get("/listAsegurado/:id", auth, async (req, res) => {
+  try {
+    const { role } = req.user;
+    if (role !== ROLE_ASEGURADOR) {
+      return res.status(401).send({ MSG_ERROR_PERMISOS });
+    }
+
+    const aseguradoId = req.params.id; 
+    console.log("Asegurado ID:", aseguradoId);
+
+    const result = await getPolizasAsegurado(aseguradoId); 
+    res.status(200).send(result);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+
+
+
+
 function validarBodyRegistro(body) {
   return body.dniAsegurado && body.vehiculo.dominio;
 }
+
+
 
 export default polizasRouter;
