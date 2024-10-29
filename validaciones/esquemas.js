@@ -3,19 +3,11 @@ import Joi from "joi";
 
 
 export const esquemaDomicilio = Joi.object({
-<<<<<<< HEAD
-    calle: Joi.string().required(),
-    localidad: Joi.string().required(),
-    codigoPostal: Joi.number().required(),
-    provincia: Joi.string().required(),
-    pais: Joi.string().required()
-=======
     address: Joi.string().required(),
     locality: Joi.string().required(),
     zip_code: Joi.number().required(),
     province: Joi.string().required(),
     country: Joi.string().required()
->>>>>>> 6a62a35a5e588e288e95a38fa9780a0b07ac2d54
 })
 
 const esquemaLugarAsistencia = Joi.object({
@@ -26,23 +18,6 @@ const esquemaLugarAsistencia = Joi.object({
 })
 
 const esquemaVehiculo = Joi.object({
-<<<<<<< HEAD
-    numeroIdentificador: Joi.string().required(),
-    marca: Joi.string().required(),
-    modelo: Joi.string().required(),
-    tipoVehiculo: Joi.string().valid('AUTO', 'MOTO', 'CAMION').required(),
-    anio: Joi.number().integer().required(),
-    dominio: Joi.string().required(),
-    idAsegurado: Joi.number().integer().required(),
-    color: Joi.string().required()
-});
-
-const esquemaVehiculoTercero = Joi.object({
-    esquemaVehiculo: esquemaVehiculo,
-    aseguradora: Joi.string().required(),
-    poliza: Joi.string().required(),
-    fechaVencimiento: Joi.date().required()
-=======
     marca: Joi.string().required(),
     modelo: Joi.string().required(),
     tipoVehiculo: Joi.string().valid('AUTO', 'MOTO', 'CAMION').required(),
@@ -55,18 +30,13 @@ const esquemaVehiculoTercero = Joi.object({
     datosVehiculo: esquemaVehiculo,
     aseguradora: Joi.string().required(),
     poliza: Joi.string().required()
->>>>>>> 6a62a35a5e588e288e95a38fa9780a0b07ac2d54
 });
 
 const esquemaPersona = Joi.object({
     nombre: Joi.string().required(),
     apellido: Joi.string().required(),
     nombreCompleto: Joi.string().required(),
-<<<<<<< HEAD
-    cuit: Joi.string().required(),
-=======
     cuit: Joi.number().required(),
->>>>>>> 6a62a35a5e588e288e95a38fa9780a0b07ac2d54
     email: Joi.string().email().required(),
     telefono: Joi.number().integer().required(),
     fechaDeNacimiento: Joi.date().required(),
