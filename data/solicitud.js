@@ -41,3 +41,15 @@ export async function crearSolicitud(solicitud) {
     .collection(COLECCTION_SOLICITUDES)
     .insertOne(solicitud);
 }
+
+
+export async function getSolicitud(_id) {
+  
+  const client = await getConnection();
+  const solicitud = await client
+  .db(DATABASE)
+  .collection(COLECCTION_SOLICITUDES)
+  .findOne({_id: new ObjectId(_id)}); 
+
+  return solicitud;
+}

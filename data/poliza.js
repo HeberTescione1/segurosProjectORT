@@ -76,3 +76,5 @@ export async function getPolizas(aseguradorId, role) {
     .toArray();
 }
 
+
+

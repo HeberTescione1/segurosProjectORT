@@ -3,7 +3,7 @@ const solicitudesRouter = express.Router();
 import auth from "../middleware/auth.js";
 import validarSolicitud from "../validaciones/validaciones.js";
 
-import {getSolicitudes, crearSolicitud } from "../data/solicitud.js"
+import {getSolicitudes, crearSolicitud, getSolicitud } from "../data/solicitud.js"
 
 const MSG_ERROR_VALIDACION = "Debe especificar todos los campos.";
 const MSG_ERROR_401 = "No tiene permisos para realizar esta acción.";
@@ -35,5 +35,17 @@ solicitudesRouter.post("/send",
         res.status(500).send(error.message);
     }
 })
+
+solicitudesRouter.get("/buscarSolicitud", auth, async (req, res) => {
+    try {
+        const {_id} = req.body.solicitud;
+        const result = await getSolicitud (_id);
+        res.status(200).send(result);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+})
+
+
 
 export default solicitudesRouter;
