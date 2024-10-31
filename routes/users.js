@@ -17,6 +17,7 @@ import {
   validarBodyRegistro,
   validarBodySinPassword,
 } from "../validaciones/validaciones.js";
+import acceso from "../middleware/acceso.js";
 
 const usersRouter = express.Router();
 const MSG_ERROR_409 =
@@ -43,7 +44,6 @@ usersRouter.get("/buscarCliente/:id", async (req, res) => {
 });
 
 usersRouter.put("/editarCliente/:id", auth, async (req, res) => {
-  console.log("UpdateUser - LASTNAME:", req.body.lastname);
   try {
     const { role } = req.user;
     if (role !== ROLE_ASEGURADOR) {
@@ -76,20 +76,24 @@ usersRouter.put("/editarCliente/:id", auth, async (req, res) => {
   }
 });
 
-//validar.
+//  Validaciones
+//  email         usuario@dominio.algo
+//  dni           numeros igual o mas de 7 numeros y igual o menos a 8
+//  contraseña    Se setea contraseña "D{dni usuario}!"
+//falta validar cuit, domicilio y no se si algo mas.
 usersRouter.post("/register/client", auth, async (req, res) => {
   try {
     const { _id, role } = req.user;
     if (role !== ROLE_ASEGURADOR) {
       return res.status(401).send({ MSG_ERROR_401 });
     }
-
-    if (!validarBodySinPassword(req.body)) {
-      return res.status(400).send({ error: MSG_ERROR_400 });
+    req.body.password = `D${req.body.dni}!`;
+    const errores = validarBodyRegistro(req.body);
+    if (!validator.isEmpty(errores)) {
+      return res.status(422).send({ error: errores });
     }
-
     req.body.role = ROLE_ASEGURADO;
-    req.body.password = req.body.dni;
+
     const userInserted = await addUser(req.body);
     if (!userInserted) {
       return res.status(409).send({ error: MSG_ERROR_409 });
@@ -174,8 +178,10 @@ usersRouter.post("/register", async (req, res) => {
 
 //  Validaciones
 //  email   usuario@dominio.algo
-usersRouter.post("/login", async (req, res) => {
+usersRouter.post("/login", acceso, async (req, res) => {
   try {
+    const userAgent = req.headers["user-agent"];
+
     const { email, password } = req.body;
     if (!email || !password) {
       return res.status(400).send({
@@ -187,8 +193,18 @@ usersRouter.post("/login", async (req, res) => {
         error: MSG_ERROR_EMAIL_INVALIDO,
       });
     }
-
     const user = await findByCredential(email, password);
+    console.log(user);
+    if (user.role === "asegurado" && req.isWeb) {
+      return res
+        .status(403)
+        .send({ error: "No posee permisos para acceder desde una web." });
+    }
+    if (user.role === "asegurador" && req.isAndroid) {
+      return res.status(403).send({
+        error: "No posee permisos para acceder desde un dispositivo Android.",
+      });
+    }
     const token = await generateAuthToken(user);
     res.status(200).send({ token });
   } catch (error) {
