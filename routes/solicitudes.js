@@ -2,6 +2,7 @@ import express from "express";
 const solicitudesRouter = express.Router();
 import auth from "../middleware/auth.js";
 import validarSolicitud from "../validaciones/validaciones.js";
+import validarDuenio  from "../validaciones/validarDuenio.js";
 
 import {getSolicitudes, crearSolicitud, getSolicitud } from "../data/solicitud.js"
 
@@ -37,10 +38,16 @@ solicitudesRouter.post("/send",
 })
 
 solicitudesRouter.get("/buscarSolicitud", auth, async (req, res) => {
+    
     try {
         const {_id} = req.body.solicitud;
-        const result = await getSolicitud (_id);
-        res.status(200).send(result);
+        const solicitud = await getSolicitud (_id);
+
+        if(!validarDuenio(solicitud.idAsegurado, req)){
+            return res.status(403).send("No tienes permiso para acceder a esta solicitud");
+        }
+
+        res.status(200).send(solicitud);
     } catch (error) {
         res.status(500).send(error.message);
     }
