@@ -36,6 +36,8 @@ export async function crearSolicitud(solicitud) {
   const client = await getConnection();
   //TODO VALIDAR QUE LA SOLICITUD NO EXISTA
 
+  delete solicitud._id;
+
   return client
     .db(DATABASE)
     .collection(COLECCTION_SOLICITUDES)

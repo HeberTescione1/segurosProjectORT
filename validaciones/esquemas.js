@@ -4,10 +4,11 @@ import Joi from "joi";
 
 export const esquemaDomicilio = Joi.object({
     address: Joi.string().required(),
-    locality: Joi.string().required(),
+    number: Joi.number().required(),
+    floor: Joi.number(),
+    apartment: Joi.string(),
     zip_code: Joi.number().required(),
-    province: Joi.string().required(),
-    country: Joi.string().required()
+
 })
 
 const esquemaLugarAsistencia = Joi.object({
@@ -142,6 +143,7 @@ const esquemaPropietarioAsegurado = Joi.object({
 })
 
 export const esquemaSolicitud = Joi.object({
+    _id: Joi.string().valid(""),
     estado: Joi.string().valid('PENDIENTE', 'RECHAZADO', 'ACEPTADO').required(),
     daniosVehiculoAsegurado: Joi.string().required(),
     daniosVehiculoAfectado: Joi.string().required(),
