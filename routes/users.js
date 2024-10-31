@@ -11,15 +11,21 @@ import {
   deleteUser,
 } from "../data/user.js";
 import auth from "../middleware/auth.js";
+import validator from "validator";
+import {
+  validarContrasena,
+  validarBodyRegistro,
+  validarBodySinPassword,
+} from "../validaciones/validaciones.js";
 
 const usersRouter = express.Router();
-const MSG_ERROR_400 =
-  "Faltan campos obligatorios: se requieren nombre, apellido, contraseña, email y dni.";
 const MSG_ERROR_409 =
   "El dni o el mail ya se encuentra registrado en nuestra base de datos.";
 const MSG_ERROR_401 = "No tiene permisos para realizar esta acción.";
 const MSG_ERROR_LOGIN_VACIO =
   "Faltan campos obligatorios: se requieren email y contraseña.";
+const MSG_ERROR_EMAIL_INVALIDO =
+  "El email proporcionado no tiene formato de email.";
 const ROLE_ASEGURADOR = "asegurador";
 const ROLE_ASEGURADO = "asegurado";
 const ROLE_ADMIN = "admin";
@@ -51,12 +57,10 @@ usersRouter.put("/editarCliente/:id", auth, async (req, res) => {
       req.body.dni
     );
     if (duplicate) {
-      return res
-        .status(400)
-        .send({
-          error:
-            "El dni o el mail ya se encuentra registrado en nuestra base de datos.",
-        });
+      return res.status(400).send({
+        error:
+          "El dni o el mail ya se encuentra registrado en nuestra base de datos.",
+      });
     }
 
     const result = await updateUser(req.params.id, req.body);
@@ -72,6 +76,7 @@ usersRouter.put("/editarCliente/:id", auth, async (req, res) => {
   }
 });
 
+//validar.
 usersRouter.post("/register/client", auth, async (req, res) => {
   try {
     const { _id, role } = req.user;
@@ -104,6 +109,7 @@ usersRouter.post("/register/client", auth, async (req, res) => {
   }
 });
 
+//no tiene validaciones de campos
 usersRouter.delete("/:id", auth, async (req, res) => {
   try {
     const { role } = req.user;
@@ -120,6 +126,7 @@ usersRouter.delete("/:id", auth, async (req, res) => {
   }
 });
 
+//no tiene validaciones de campos
 usersRouter.get("/clients", auth, async (req, res) => {
   try {
     const { _id, role } = req.user;
@@ -144,10 +151,15 @@ usersRouter.get("/clients", auth, async (req, res) => {
   }
 });
 
+//  Validaciones
+//  email         usuario@dominio.algo
+//  dni           numeros igual o mas de 7 numeros y igual o menos a 8
+//  contraseña    mayuscula, caracter especial y numero, 8 o mas caracteres
 usersRouter.post("/register", async (req, res) => {
   try {
-    if (!validarBodyRegistro(req.body)) {
-      return res.status(400).send({ error: MSG_ERROR_400 });
+    const errores = validarBodyRegistro(req.body);
+    if (!validator.isEmpty(errores)) {
+      return res.status(422).send({ error: errores });
     }
     req.body.role = ROLE_ASEGURADOR;
     const result = await addUser(req.body);
@@ -160,6 +172,8 @@ usersRouter.post("/register", async (req, res) => {
   }
 });
 
+//  Validaciones
+//  email   usuario@dominio.algo
 usersRouter.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -168,6 +182,12 @@ usersRouter.post("/login", async (req, res) => {
         error: MSG_ERROR_LOGIN_VACIO,
       });
     }
+    if (!validator.isEmail(email)) {
+      return res.status(400).send({
+        error: MSG_ERROR_EMAIL_INVALIDO,
+      });
+    }
+
     const user = await findByCredential(email, password);
     const token = await generateAuthToken(user);
     res.status(200).send({ token });
@@ -175,13 +195,5 @@ usersRouter.post("/login", async (req, res) => {
     res.status(401).send(error.message);
   }
 });
-
-function validarBodyRegistro(body) {
-  return validarBodySinPassword(body) && body.password;
-}
-
-function validarBodySinPassword(body) {
-  return body.email && body.name && body.lastname;
-}
 
 export default usersRouter;
