@@ -38,18 +38,20 @@ solicitudesRouter.post("/send",
 })
 
 solicitudesRouter.get("/buscarSolicitud", auth, async (req, res) => {
+    console.log(req.query);
     
     try {
-        const {_id} = req.body.solicitud;
-        const solicitud = await getSolicitud (_id);
+        const {idSolicitud} = req.query;
+        const solicitud = await getSolicitud (idSolicitud);
 
         if(!validarDuenio(solicitud.idAsegurado, req)){
             return res.status(403).send("No tienes permiso para acceder a esta solicitud");
         }
-
         res.status(200).send(solicitud);
     } catch (error) {
         res.status(500).send(error.message);
+        console.log(error.message);
+        
     }
 })
 

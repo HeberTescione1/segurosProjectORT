@@ -46,6 +46,7 @@ export async function crearSolicitud(solicitud) {
 
 
 export async function getSolicitud(_id) {
+  console.log(_id);
   
   const client = await getConnection();
   const solicitud = await client
