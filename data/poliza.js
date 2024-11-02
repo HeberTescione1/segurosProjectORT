@@ -8,9 +8,8 @@ const COLECCTION_POLIZAS = process.env.POLIZAS_COLECCTION;
 export async function addPoliza(poliza) {
   let result = null;
   const clientmongo = await getConnection();
-  const polizaExist = await buscarPolizaPorDominio(
-    clientmongo,
-    poliza.dniAsegurado
+  const polizaExist = await getPolizaDominio(
+    poliza.vehiculo.dominio
   );
   if (!polizaExist) {
     const asegurado = await buscarAseguradoPorDni(
@@ -23,13 +22,6 @@ export async function addPoliza(poliza) {
   }
 
   return result;
-}
-
-function buscarPolizaPorDominio(clientmongo, dominio) {
-  return clientmongo
-    .db(DATABASE)
-    .collection(COLECCTION_POLIZAS)
-    .findOne({ dominio: dominio });
 }
 
 function buscarAseguradoPorDni(clientmongo, dni) {
@@ -74,17 +66,6 @@ export async function getPolizas(aseguradorId, role) {
     .collection(COLECCTION_POLIZAS)
     .find(query)
     .toArray();
-}
-
-export async function getPolizaDominio(dominio) {
-  
-  const client = await getConnection();
-  const poliza = await client
-  .db(DATABASE)
-  .collection(COLECCTION_POLIZAS)
-  .findOne({dominio: dominio}); 
-
-  return poliza;
 }
 
 export async function getPolizaDominio(dominio) {
