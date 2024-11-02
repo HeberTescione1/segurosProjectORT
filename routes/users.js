@@ -3,7 +3,6 @@ import {
   addUser,
   findByCredential,
   generateAuthToken,
-  getUserById,
   updateUser,
   addClient,
   getUserByToken,

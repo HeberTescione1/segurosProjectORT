@@ -1,5 +1,5 @@
 import express from "express";
-import { addPoliza, getPolizas,} from "../data/poliza.js";
+import { addPoliza, getPolizas,getPolizaDominio} from "../data/poliza.js";
 import auth from "../middleware/auth.js";
 
 const polizasRouter = express.Router();
@@ -70,6 +70,17 @@ function validarBodyRegistro(body) {
   return body.dniAsegurado && body.vehiculo.dominio;
 }
 
+polizasRouter.get("/buscarPolizaPorDominio", auth, async (req,res) =>{
+  
+  try {
+    const {dominio} = req.query
+    console.log(dominio);
+    const poliza = await getPolizaDominio(dominio)
 
+    res.status(200).send(poliza)
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+})
 
 export default polizasRouter;

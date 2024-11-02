@@ -76,6 +76,28 @@ export async function getPolizas(aseguradorId, role) {
     .toArray();
 }
 
+export async function getPolizaDominio(dominio) {
+  
+  const client = await getConnection();
+  const poliza = await client
+  .db(DATABASE)
+  .collection(COLECCTION_POLIZAS)
+  .findOne({dominio: dominio}); 
+
+  return poliza;
+}
+
+export async function getPolizaDominio(dominio) {
+  
+  const client = await getConnection();
+  const poliza = await client
+  .db(DATABASE)
+  .collection(COLECCTION_POLIZAS)
+  .findOne({dominio: dominio}); 
+
+  return poliza;
+}
+
 export async function getPolizasAsegurado(aseguradoId) {
   const clientmongo = await getConnection();
   return clientmongo
