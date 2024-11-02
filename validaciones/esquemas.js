@@ -100,7 +100,6 @@ const esquemaDatosSiniestro = Joi.object({
     lugarOcurrencia: Joi.string().required(),
     codigoPostal: Joi.number().required(),
     cantidadAutosParticipantes: Joi.number().required(),
-    interseccion: Joi.string().required(),
     hubieronDaniosPersonales: Joi.boolean().required(),
     hubieronDaniosMateriales: Joi.boolean().required(),
     hubieronTestigos: Joi.boolean().required(),

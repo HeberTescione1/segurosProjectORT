@@ -38,7 +38,6 @@ solicitudesRouter.post("/send",
 })
 
 solicitudesRouter.get("/buscarSolicitud", auth, async (req, res) => {
-    console.log(req.query);
     
     try {
         const {idSolicitud} = req.query;
@@ -50,7 +49,6 @@ solicitudesRouter.get("/buscarSolicitud", auth, async (req, res) => {
         res.status(200).send(solicitud);
     } catch (error) {
         res.status(500).send(error.message);
-        console.log(error.message);
         
     }
 })
