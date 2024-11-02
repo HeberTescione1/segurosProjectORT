@@ -1,12 +1,10 @@
 import getConnection from "./connection.js";
 import { ObjectId } from "mongodb";
-import { getUser } from "./user.js";
 
 const DATABASE = process.env.DATABASE;
 const COLECCTION_SOLICITUDES = process.env.SOLICITUDES_COLECCTION;
 
 export async function getSolicitudes(_id, role) {
-  console.log(_id);
   
     const client = await getConnection();
     const query = role === "asegurador" 

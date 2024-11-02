@@ -41,8 +41,8 @@ function buscarAseguradoPorDni(clientmongo, dni) {
 
 function guardarPoliza(clientmongo, poliza, asegurado) {
   const data = {
-    asegurado: new ObjectId.createFromTime(asegurado._id),
-    asegurador: new ObjectId.createFromTime(poliza.aseguradorId),
+    asegurado: new ObjectId(asegurado._id),
+    asegurador: new ObjectId(poliza.aseguradorId),
     dominio: poliza.vehiculo.dominio,
     tipoCobertura: poliza.tipoCobertura,
     aseguradora: poliza.aseguradora,
@@ -67,8 +67,8 @@ function guardarPoliza(clientmongo, poliza, asegurado) {
 export async function getPolizas(aseguradorId, role) {
   const clientmongo = await getConnection();
   const query = role === "asegurador" 
-    ? { asegurador: new ObjectId.createFromTime(aseguradorId) } 
-    : { asegurado: new ObjectId.createFromTime(aseguradorId) };
+    ? { asegurador: new ObjectId(aseguradorId) } 
+    : { asegurado: new ObjectId(aseguradorId) };
   return clientmongo
     .db(DATABASE)
     .collection(COLECCTION_POLIZAS)
