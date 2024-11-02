@@ -1,4 +1,5 @@
 import validator from "validator";
+import {esquemaSolicitud } from "./esquemas.js";
 
 export function validarContrasena(contrasena) {
   const mayuscula = /[A-Z]/.test(contrasena);
@@ -57,3 +58,15 @@ export function validarBodyRegistro(body) {
   }
   return res;
 }
+
+
+
+const validarSolicitud = (req, res, next) => {
+    const { error } = esquemaSolicitud.validate(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+    next();
+  };
+
+  export default validarSolicitud
