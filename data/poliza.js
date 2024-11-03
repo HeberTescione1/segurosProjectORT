@@ -93,3 +93,13 @@ export async function getPolizasAsegurado(aseguradoId) {
     .find({ asegurado: new ObjectId(aseguradoId) })
     .toArray();
 }
+
+export async function eliminarPoliza(id) {
+  const clientmongo = await getConnection();
+  const result = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION_POLIZAS)
+    .deleteOne({ _id: new ObjectId(id) });
+  return result;
+  
+}

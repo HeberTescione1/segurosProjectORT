@@ -1,5 +1,5 @@
 import express from "express";
-import { addPoliza, getPolizas,getPolizaDominio} from "../data/poliza.js";
+import { addPoliza, getPolizas,getPolizaDominio, eliminarPoliza} from "../data/poliza.js";
 import auth from "../middleware/auth.js";
 
 const polizasRouter = express.Router();
@@ -9,6 +9,7 @@ const ROLE_ASEGURADOR = "asegurador";
 const MSG_ERROR_VALIDACION = "Debe especificar todos los campos.";
 const MSG_ERROR_POLIZA_EXISTE = "La poliza ya se encuentra registrada.";
 const MSG_ERROR_PERMISOS = "No tiene permisos para realizar esta acción.";
+const MSG_ERROR_401 = "No tiene permisos para realizar esta acción.";
 
 polizasRouter.post("/register", auth, async (req, res) => {
   try {
@@ -84,5 +85,26 @@ polizasRouter.get("/buscarPolizaPorDominio", auth, async (req,res) =>{
     res.status(500).send(error.message);
   }
 })
+
+polizasRouter.delete("/:id", auth, async (req, res) => {
+  console.log("llegoooooo",req.params.id);
+  
+  
+  try {
+    const { role } = req.user;
+    if (role !== ROLE_ASEGURADOR) {
+      return res.status(401).send({ error: MSG_ERROR_401 });
+    }
+    const result = await eliminarPoliza(req.params.id); 
+    if (!result) {
+      return res.status(404).send({ error: "La poliza no existe." });
+    }
+    res.status(200).send(result);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+  
+})
+
 
 export default polizasRouter;
