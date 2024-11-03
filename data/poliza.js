@@ -56,11 +56,17 @@ function guardarPoliza(clientmongo, poliza, asegurado) {
     .insertOne(data);
 }
 
-export async function getPolizas(aseguradorId, role) {
+export async function getPolizas(aseguradorId, role, {dominio}) {
   const clientmongo = await getConnection();
-  const query = role === "asegurador" 
+  let query = role === "asegurador" 
     ? { asegurador: new ObjectId(aseguradorId) } 
     : { asegurado: new ObjectId(aseguradorId) };
+
+    if(dominio){
+      query.dominio = dominio
+    }
+    console.log("ss", query);
+    
   return clientmongo
     .db(DATABASE)
     .collection(COLECCTION_POLIZAS)

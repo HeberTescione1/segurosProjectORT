@@ -32,11 +32,13 @@ polizasRouter.post("/register", auth, async (req, res) => {
 });
 
 // Listar todas las polizas del asegurador al ingresar a la app
-polizasRouter.get("/list", auth, async (req, res) => {
+polizasRouter.get("/list", auth, async (req, res) => {  
   try {
     const { _id, role } = req.user;
+
+    const { dominio } = req.query;
   
-    const result = await getPolizas(_id, role);
+    const result = await getPolizas(_id, role, {dominio});
     
     res.status(200).send(result);
   } catch (error) {
