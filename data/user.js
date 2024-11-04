@@ -25,28 +25,26 @@ export async function getUserById(id) {
   return user;
 }
 
-export async function addUser(user) {
+export async function addUser(userData) {
   const clientmongo = await getConnection();
-  const dniExist = await clientmongo
-    .db(DATABASE)
-    .collection(COLECCTION)
-    .findOne({ dni: user.dni });
+  userData.password = await bcryptjs.hash(userData.dni, 10);
 
-  const emailExist = await clientmongo
-    .db(DATABASE)
-    .collection(COLECCTION)
-    .findOne({ email: user.email });
-
-  let result = null;
-  if (!dniExist && !emailExist) {
-    user.password = await bcryptjs.hash(user.password, 10);
-
-    result = await clientmongo
-      .db(DATABASE)
-      .collection(COLECCTION)
-      .insertOne(user);
+  const estaDuplicado = await checkDuplicateEmailOrDni(null, userData.email, userData.dni);
+  if (estaDuplicado) {
+    return { success: false, error: {error: 'El correo electrónico o DNI ya está en uso.'} };
   }
-  return result;
+
+  const [year, month, day] = userData.date_of_birth.split('-');
+  userData.date_of_birth = `${day}-${month}-${year}`;
+
+  userData.asegurador = new ObjectId(userData.asegurador);
+
+  const result = await clientmongo
+  .db(DATABASE)
+  .collection(COLECCTION)
+  .insertOne(userData);
+
+  return result
 }
 
 export async function findByCredential(email, password) {

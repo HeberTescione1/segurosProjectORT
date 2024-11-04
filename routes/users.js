@@ -18,6 +18,8 @@ import {
   validarBodySinPassword,
 } from "../validaciones/validaciones.js";
 import acceso from "../middleware/acceso.js";
+import validarAsegurador from "../validaciones/validarAsegurador.js";
+import validarBodyCliente from "../validaciones/validarBodyCliente.js";
 
 const usersRouter = express.Router();
 const MSG_ERROR_409 =
@@ -81,33 +83,46 @@ usersRouter.put("/editarCliente/:id", auth, async (req, res) => {
 //  dni           numeros igual o mas de 7 numeros y igual o menos a 8
 //  contraseña    Se setea contraseña "D{dni usuario}!"
 //falta validar cuit, domicilio y no se si algo mas.
-usersRouter.post("/register/client", auth, async (req, res) => {
+usersRouter.post('/register/client', auth, async (req, res) => {
   try {
-    const { _id, role } = req.user;
-    if (role !== ROLE_ASEGURADOR) {
-      return res.status(401).send({ MSG_ERROR_401 });
-    }
-    req.body.password = `D${req.body.dni}!`;
-    const errores = validarBodyRegistro(req.body);
-    if (!validator.isEmpty(errores)) {
-      return res.status(422).send({ error: errores });
-    }
-    req.body.role = ROLE_ASEGURADO;
-
-    const userInserted = await addUser(req.body);
-    if (!userInserted) {
-      return res.status(409).send({ error: MSG_ERROR_409 });
+    const aseguradorId = validarAsegurador(req);
+    if (!aseguradorId) {
+      return res.status(403).send("No tienes permisos para realizar esta acción");
     }
 
-    const result = await addClient({
-      aseguradorId: _id,
-      clienteId: userInserted.insertedId,
-    });
-
-    if (!result) {
-      return res.status(409).send({ error: MSG_ERROR_409 });
+    const validationError = validarBodyCliente(req.body);
+    if (validationError) {
+      return res.status(422).send(validationError);
     }
-    res.status(201).send("Cliente agregado correctamente.");
+
+    const { email, name, lastname, dni, phone, date_of_birth, gender, address, number, floor, apartment, zip_code } = req.body;
+    const domicile = {
+      address,
+      number,
+      floor,
+      apartment,
+      zip_code,
+    };
+
+    const newUser = {
+      email,
+      name,
+      lastname,
+      dni,
+      domicile,
+      phone,
+      date_of_birth,
+      gender,
+      role: 'asegurado',
+      asegurador: aseguradorId,
+    };
+
+    const result = await addUser(newUser);
+    if (!result.acknowledged) {
+      return res.status(409).send(result.error);
+    }
+    res.status(201).send(result);
+    
   } catch (error) {
     res.status(500).send(error.message);
   }
@@ -134,6 +149,7 @@ usersRouter.delete("/:id", auth, async (req, res) => {
 usersRouter.get("/clients", auth, async (req, res) => {
   try {
     const { _id, role } = req.user;
+    
     if (role !== ROLE_ASEGURADOR) {
       return res.status(401).send({ error: MSG_ERROR_401 });
     }
@@ -150,6 +166,8 @@ usersRouter.get("/clients", auth, async (req, res) => {
     });
 
     res.status(200).send(clients);
+    //console.log(clients);
+    
   } catch (error) {
     res.status(500).send(error.message);
   }
