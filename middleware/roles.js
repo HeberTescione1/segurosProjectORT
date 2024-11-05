@@ -23,7 +23,6 @@ export const verificarRolAsegurador = (req, res, next) => {
   next();
 };
 
-
 export const verificarRolAdministrador = (req, res, next) => {
   const { role } = req.user;
 
