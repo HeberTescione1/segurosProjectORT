@@ -4,7 +4,6 @@ const ROLE_ASEGURADOR = "asegurador";
 const ROLE_ADMINISTRADOR = "administrador";
 
 export const verificarRolAsegurado = (req, res, next) => {
-export const verificarRolAsegurado = (req, res, next) => {
   const { role } = req.user;
 
   if (role !== ROLE_ASEGURADO) {
