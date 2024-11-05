@@ -1,6 +1,6 @@
 //FALTA IMPLEMENTAR.
 
-const verificarRolAsegurado = (req, res, next) => {
+export const verificarRolAsegurado = (req, res, next) => {
   const { role } = req.user;
 
   if (role !== ROLE_ASEGURADO) {
@@ -10,7 +10,18 @@ const verificarRolAsegurado = (req, res, next) => {
   next();
 };
 
-const verificarRolAsegurador = (req, res, next) => {
+
+export const verificarRolesPrimarios = (req, res, next) => {
+  const { role } = req.user;
+
+  if (role !== ROLE_ASEGURADO && role !== ROLE_ASEGURADOR) {
+    return res.status(403).send({ error: "Usuario sin permisos." });
+  }
+
+  next();
+};
+
+export const verificarRolAsegurador = (req, res, next) => {
   const { role } = req.user;
 
   if (role !== ROLE_ASEGURADOR) {

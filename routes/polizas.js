@@ -1,6 +1,9 @@
 import express from "express";
 import { addPoliza, getPolizas,} from "../data/poliza.js";
 import auth from "../middleware/auth.js";
+import { verificarRolAdministrador, verificarRolAsegurado, verificarRolAsegurador, verificarRolesPrimarios } from "../middleware/roles.js";
+import validarBodyPoliza from "../validaciones/validarBodyPoliza.js";
+
 
 const polizasRouter = express.Router();
 
@@ -32,7 +35,9 @@ polizasRouter.post("/register", auth, async (req, res) => {
 });
 
 // Listar todas las polizas del asegurador al ingresar a la app
-polizasRouter.get("/list", auth, async (req, res) => {
+
+//middleware de autentificacion y asegurador
+polizasRouter.get("/list", auth, verificarRolesPrimarios, async (req, res) => {
   try {
     const { _id, role } = req.user;
   
