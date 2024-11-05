@@ -1,7 +1,8 @@
 import express from "express";
-import { addPoliza, getPolizas,} from "../data/poliza.js";
+import { addPoliza, getPolizas,getPolizaDominio, eliminarPoliza} from "../data/poliza.js";
 import auth from "../middleware/auth.js";
 import { verificarRolAdministrador, verificarRolAsegurador } from "../middleware/roles.js";
+import validarBodyPoliza from "../validaciones/validarBodyPoliza.js";
 
 const polizasRouter = express.Router();
 
@@ -10,6 +11,7 @@ const ROLE_ASEGURADOR = "asegurador";
 const MSG_ERROR_VALIDACION = "Debe especificar todos los campos.";
 const MSG_ERROR_POLIZA_EXISTE = "La poliza ya se encuentra registrada.";
 const MSG_ERROR_PERMISOS = "No tiene permisos para realizar esta acción.";
+const MSG_ERROR_401 = "No tiene permisos para realizar esta acción.";
 
 
 //middleware de rol asegurador.
@@ -18,11 +20,32 @@ polizasRouter.post("/register", auth, verificarRolAsegurador, async (req, res) =
   try {
     const { _id } = req.user;
 
-    if (!validarBodyRegistro(req.body)) {
-      return res.status(400).send({ error: MSG_ERROR_VALIDACION });
+    const validationError = validarBodyPoliza(req.body);
+
+    if (validationError) {
+      return res.status(422).send(validationError);
     }
-    req.body.aseguradorId = _id;
-    const result = await addPoliza(req.body);
+    const { dni, aseguradora , primaSegura, deducible ,tipoCobertura, dominio, marca, modelo, anio, color, tipoVehiculo, numeroIdentificador } = req.body;
+    const vehiculo = {
+      dominio,
+      marca,
+      modelo,
+      anio,
+      color,
+      tipoVehiculo,
+      numeroIdentificador
+    };
+
+    const nuevaPoliza ={
+      dni, 
+      aseguradora , 
+      primaSegura, 
+      deducible, 
+      tipoCobertura,
+      vehiculo,
+      aseguradorId: _id
+    }
+    const result = await addPoliza(nuevaPoliza);
     if (!result) {
       return res.status(409).send({ error: MSG_ERROR_POLIZA_EXISTE });
     }
@@ -35,10 +58,13 @@ polizasRouter.post("/register", auth, verificarRolAsegurador, async (req, res) =
 // Listar todas las polizas del asegurador al ingresar a la app
 //middleware de autentificacion y asegurador
 polizasRouter.get("/list", auth, verificarRolAsegurador, async (req, res) => {
+
   try {
     const { _id, role } = req.user;
+
+    const { dominio } = req.query;
   
-    const result = await getPolizas(_id, role);
+    const result = await getPolizas(_id, role, {dominio});
     
     res.status(200).send(result);
   } catch (error) {
@@ -64,14 +90,38 @@ polizasRouter.get("/listAsegurado/:id", auth, async (req, res) => {
   }
 });
 
+polizasRouter.get("/buscarPolizaPorDominio", auth, async (req,res) =>{
+  
+  try {
+    const {dominio} = req.query
+    console.log(dominio);
+    const poliza = await getPolizaDominio(dominio)
 
+    res.status(200).send(poliza)
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+})
 
-
-
-function validarBodyRegistro(body) {
-  return body.dniAsegurado && body.vehiculo.dominio;
-}
-
+polizasRouter.delete("/:id", auth, async (req, res) => {
+  console.log("llegoooooo",req.params.id);
+  
+  
+  try {
+    const { role } = req.user;
+    if (role !== ROLE_ASEGURADOR) {
+      return res.status(401).send({ error: MSG_ERROR_401 });
+    }
+    const result = await eliminarPoliza(req.params.id); 
+    if (!result) {
+      return res.status(404).send({ error: "La poliza no existe." });
+    }
+    res.status(200).send(result);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+  
+})
 
 
 export default polizasRouter;
