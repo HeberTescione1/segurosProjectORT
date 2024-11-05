@@ -6,6 +6,7 @@ const COLECCTION_USERS = process.env.USERS_COLECCTION;
 const COLECCTION_POLIZAS = process.env.POLIZAS_COLECCTION;
 
 export async function addPoliza(poliza) {
+ 
   let result = null;
   const clientmongo = await getConnection();
   const polizaExist = await getPolizaDominio(
@@ -14,21 +15,31 @@ export async function addPoliza(poliza) {
   if (!polizaExist) {
     const asegurado = await buscarAseguradoPorDni(
       clientmongo,
-      poliza.dniAsegurado
+      poliza.dni
     );
     if (asegurado) {
       result = await guardarPoliza(clientmongo, poliza, asegurado);
     }
+  }else{
+    throw new Error("La poliza ya existe");
   }
 
   return result;
 }
 
-function buscarAseguradoPorDni(clientmongo, dni) {
-  return clientmongo
-    .db(DATABASE)
-    .collection(COLECCTION_USERS)
-    .findOne({ dni: dni });
+async function buscarAseguradoPorDni(clientmongo, dni) { 
+  const asegurado = await clientmongo
+  .db(DATABASE)
+  .collection(COLECCTION_USERS)
+  .findOne({ dni: dni });
+
+  console.log(asegurado);
+  
+  if (!asegurado) {
+    throw new Error("No existe el asegurado");
+  }
+
+  return asegurado
 }
 
 function guardarPoliza(clientmongo, poliza, asegurado) {
