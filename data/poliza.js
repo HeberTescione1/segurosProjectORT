@@ -66,7 +66,7 @@ export async function getPolizas(aseguradorId, role, {dominio}) {
       query.dominio = dominio
     }
     console.log("ss", query);
-    
+
   return clientmongo
     .db(DATABASE)
     .collection(COLECCTION_POLIZAS)
@@ -102,4 +102,18 @@ export async function eliminarPoliza(id) {
     .deleteOne({ _id: new ObjectId(id) });
   return result;
   
+}
+
+export async function actualizarPoliza(id, datosActualizados) {
+  const clientmongo = await getConnection();
+  const result = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION_POLIZAS)
+    .findOneAndUpdate(
+      { _id: new ObjectId(id) },
+      { $set: datosActualizados },
+      { returnDocument: "after" }
+    );
+
+  return result;
 }
