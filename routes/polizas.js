@@ -1,6 +1,7 @@
 import express from "express";
 import { addPoliza, getPolizas,} from "../data/poliza.js";
 import auth from "../middleware/auth.js";
+import { verificarRolAdministrador, verificarRolAsegurador } from "../middleware/roles.js";
 
 const polizasRouter = express.Router();
 
@@ -10,12 +11,12 @@ const MSG_ERROR_VALIDACION = "Debe especificar todos los campos.";
 const MSG_ERROR_POLIZA_EXISTE = "La poliza ya se encuentra registrada.";
 const MSG_ERROR_PERMISOS = "No tiene permisos para realizar esta acción.";
 
-polizasRouter.post("/register", auth, async (req, res) => {
+
+//middleware de rol asegurador.
+//hay que ver que mas hace falta validar.
+polizasRouter.post("/register", auth, verificarRolAsegurador, async (req, res) => {
   try {
-    const { _id, role } = req.user;
-    if (role !== ROLE_ASEGURADOR) {
-      return res.status(401).send({ MSG_ERROR_PERMISOS });
-    }
+    const { _id } = req.user;
 
     if (!validarBodyRegistro(req.body)) {
       return res.status(400).send({ error: MSG_ERROR_VALIDACION });
@@ -32,7 +33,8 @@ polizasRouter.post("/register", auth, async (req, res) => {
 });
 
 // Listar todas las polizas del asegurador al ingresar a la app
-polizasRouter.get("/list", auth, async (req, res) => {
+//middleware de autentificacion y asegurador
+polizasRouter.get("/list", auth, verificarRolAsegurador, async (req, res) => {
   try {
     const { _id, role } = req.user;
   
