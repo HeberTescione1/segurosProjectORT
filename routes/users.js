@@ -3,7 +3,6 @@ import {
   addUser,
   findByCredential,
   generateAuthToken,
-  getUserById,
   updateUser,
   addClient,
   getUserByToken,
@@ -19,6 +18,12 @@ import {
   validarBodySinPassword,
 } from "../validaciones/validaciones.js";
 import acceso from "../middleware/acceso.js";
+import {
+  verificarRolAsegurado,
+  verificarRolAsegurador,
+  verificarRolAdministrador
+} from "../middleware/roles.js"
+import validarBodyCliente from "../validaciones/validarBodyCliente.js";
 
 const usersRouter = express.Router();
 const MSG_ERROR_409 =
@@ -32,6 +37,7 @@ const ROLE_ASEGURADOR = "asegurador";
 const ROLE_ASEGURADO = "asegurado";
 const ROLE_ADMIN = "admin";
 
+//no se donde se usa esto. verificar.
 usersRouter.get("/buscarCliente/:id", async (req, res) => {
   try {
     const user = await getUserById(req.params.id);
@@ -44,14 +50,12 @@ usersRouter.get("/buscarCliente/:id", async (req, res) => {
   }
 });
 
-usersRouter.put("/editarCliente/:id", auth, async (req, res) => {
-  try {
-    const { role } = req.user;
-    if (role !== ROLE_ASEGURADOR) {
-      return res.status(401).send({ error: MSG_ERROR_401 });
-    }
 
-    // Verificar duplicados
+//middleware de rol y autentificado
+//falta validar lo que viene en el body
+usersRouter.put("/editarCliente/:id", auth, verificarRolAsegurador, async (req, res) => {
+  try {
+
     const duplicate = await checkDuplicateEmailOrDni(
       req.params.id,
       req.body.email,
@@ -80,47 +84,55 @@ usersRouter.put("/editarCliente/:id", auth, async (req, res) => {
 //  Validaciones
 //  email         usuario@dominio.algo
 //  dni           numeros igual o mas de 7 numeros y igual o menos a 8
-//  contraseña    Se setea contraseña "D{dni usuario}!"
+//  contraseña    Se setea contraseña "D{dni usuario}!" despues vemos
 //falta validar cuit, domicilio y no se si algo mas.
-usersRouter.post("/register/client", auth, async (req, res) => {
+usersRouter.post('/register/client', auth, verificarRolAsegurador, async (req, res) => {
   try {
-    const { _id, role } = req.user;
-    if (role !== ROLE_ASEGURADOR) {
-      return res.status(401).send({ MSG_ERROR_401 });
-    }
-    req.body.password = `D${req.body.dni}!`;
-    const errores = validarBodyRegistro(req.body);
-    if (!validator.isEmpty(errores)) {
-      return res.status(422).send({ error: errores });
-    }
-    req.body.role = ROLE_ASEGURADO;
 
-    const userInserted = await addUser(req.body);
-    if (!userInserted) {
-      return res.status(409).send({ error: MSG_ERROR_409 });
+    const validationError = validarBodyCliente(req.body);
+    if (validationError) {
+      return res.status(422).send(validationError);
     }
 
-    const result = await addClient({
-      aseguradorId: _id,
-      clienteId: userInserted.insertedId,
-    });
+    const { email, name, lastname, dni, phone, date_of_birth, gender, address, number, floor, apartment, zip_code } = req.body;
+    const domicile = {
+      address,
+      number,
+      floor,
+      apartment,
+      zip_code,
+    };
 
-    if (!result) {
-      return res.status(409).send({ error: MSG_ERROR_409 });
+    const newUser = {
+      email,
+      name,
+      lastname,
+      dni,
+      domicile,
+      phone,
+      date_of_birth,
+      gender,
+      role: 'asegurado',
+      asegurador: aseguradorId,
+    };
+
+    const result = await addUser(newUser);
+    if (!result.acknowledged) {
+      return res.status(409).send(result.error);
     }
-    res.status(201).send("Cliente agregado correctamente.");
+    res.status(201).send(result);
+    
   } catch (error) {
     res.status(500).send(error.message);
   }
 });
 
 //no tiene validaciones de campos
-usersRouter.delete("/:id", auth, async (req, res) => {
+//middleware de autentificado y de rol.
+//FALTA VALIDAR ACA QUE NO BORRE ALGUN CLIENTE U ALGUN OTRO USUARIO DE OTRO LADO.
+usersRouter.delete("/:id", auth, verificarRolAsegurador || verificarRolAdministrador, async (req, res) => {
   try {
     const { role } = req.user;
-    if (role !== ROLE_ASEGURADOR) {
-      return res.status(401).send({ error: MSG_ERROR_401 });
-    }
     const result = await deleteUser(req.params.id);
     if (!result) {
       return res.status(404).send({ error: "El usuario no existe." });
@@ -132,12 +144,9 @@ usersRouter.delete("/:id", auth, async (req, res) => {
 });
 
 //no tiene validaciones de campos
-usersRouter.get("/clients", auth, async (req, res) => {
+usersRouter.get("/clients", auth, verificarRolAsegurador, async (req, res) => {
   try {
-    const { _id, role } = req.user;
-    if (role !== ROLE_ASEGURADOR) {
-      return res.status(401).send({ error: MSG_ERROR_401 });
-    }
+    const { _id } = req.user;
 
     const { search, dni, email, phone, cuit } = req.query; // Agregar phone y cuit a los filtros
 
@@ -151,6 +160,8 @@ usersRouter.get("/clients", auth, async (req, res) => {
     });
 
     res.status(200).send(clients);
+    //console.log(clients);
+    
   } catch (error) {
     res.status(500).send(error.message);
   }
@@ -193,7 +204,6 @@ usersRouter.post("/register", async (req, res) => {
 //  email   usuario@dominio.algo
 usersRouter.post("/login", acceso, async (req, res) => {
   try {
-    const userAgent = req.headers["user-agent"];
 
     const { email, password } = req.body;
     if (!email || !password) {
@@ -207,7 +217,7 @@ usersRouter.post("/login", acceso, async (req, res) => {
       });
     }
     const user = await findByCredential(email, password);
-    console.log(user);
+
     if (user.role === "asegurado" && req.isWeb) {
       return res
         .status(403)
