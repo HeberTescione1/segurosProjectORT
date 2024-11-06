@@ -128,25 +128,16 @@ polizasRouter.put("/:id", auth, async (req, res) => {
   try {
     const { _id, role } = req.user;
 
-    console.log(req.body)
-
     if (role !== ROLE_ASEGURADOR) {
       return res.status(401).send({ error: MSG_ERROR_401 });
     }
 
-    if (!validarBodyRegistro(req.body)) {
-      return res.status(400).send({ error: MSG_ERROR_VALIDACION });
-    }
-
-    const polizaId = req.params.id;
-    const { dominio } = req.body;
-
-    const polizaExistente = await getPolizas(_id, role, dominio);
-    if (!polizaExistente) {
+    const polizaExistente = await getPolizas(_id, role, false, req.params.id);
+    if (polizaExistente.length === 0) {	
       return res.status(404).send({ error: "La póliza no existe." });
     }
 
-    const resultado = await actualizarPoliza(polizaId, req.body);
+    const resultado = await actualizarPoliza(req.params.id, req.body);
     res.status(200).send(resultado);
   } catch (error) {
     res.status(500).send(error.message);
