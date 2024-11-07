@@ -259,7 +259,10 @@ usersRouter.post("/login", acceso, async (req, res) => {
       });
     }
     const user = await findByCredential(email, password);
-
+    
+    if (user.estado === CLIENTE_INACTIVO) {
+      return res.status(403).send({error: "Cuenta inactiva."})
+    }
     if (user.role === "asegurado" && req.isWeb) {
       return res
         .status(403)
