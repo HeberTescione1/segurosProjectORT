@@ -191,15 +191,14 @@ usersRouter.get("/clients", auth, verificarRolAsegurador, async (req, res) => {
   try {
     const { _id } = req.user;
 
-    const { search, dni, email, phone, cuit } = req.query; // Agregar phone y cuit a los filtros
+    const { search, dni, email, phone, estado } = req.query; 
 
-    // Obtener los clientes relacionados con el asegurador y aplicar filtros
     const clients = await getClientsByAsegurador(_id, {
       search,
       dni,
       email,
       phone,
-      cuit,
+      estado,
     });
 
     res.status(200).send(clients);

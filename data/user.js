@@ -167,7 +167,7 @@ export async function addClient(data) {
 
 export async function getClientsByAsegurador(
   aseguradorId,
-  { search, dni, email, phone, cuit }
+  { search, dni, email, phone, estado }
 ) {
   const clientmongo = await getConnection();
 
@@ -194,8 +194,8 @@ export async function getClientsByAsegurador(
     query.phone = phone;
   }
 
-  if (cuit) {
-    query.cuit = cuit;
+  if (estado) {
+    query.estado = estado;
   }
 
   // Buscar clientes relacionados con el asegurador y los filtros aplicados
