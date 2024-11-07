@@ -9,6 +9,8 @@ import {
   getClientsByAsegurador,
   checkDuplicateEmailOrDni,
   deleteUser,
+  getUserById,
+  changeState,
 } from "../data/user.js";
 import auth from "../middleware/auth.js";
 import validator from "validator";
@@ -25,6 +27,7 @@ import {
 } from "../middleware/roles.js"
 import validarBodyCliente from "../validaciones/validarBodyCliente.js";
 import validarAsegurador from "../validaciones/validarAsegurador.js";
+import validarAseguradorCorrecto from "../validaciones/validarAseguradorCorrecto.js";
 
 const usersRouter = express.Router();
 const MSG_ERROR_409 =
@@ -37,6 +40,8 @@ const MSG_ERROR_EMAIL_INVALIDO =
 const ROLE_ASEGURADOR = "asegurador";
 const ROLE_ASEGURADO = "asegurado";
 const ROLE_ADMIN = "admin";
+const CLIENTE_ACTIVO = "ACTIVO"
+const CLIENTE_INACTIVO = "INACTIVO"
 
 //no se donde se usa esto. verificar.
 usersRouter.get("/buscarCliente/:id", async (req, res) => {
@@ -82,6 +87,32 @@ usersRouter.put("/editarCliente/:id", auth, verificarRolAsegurador, async (req, 
   }
 });
 
+//TODO
+//validar que el productor sea prodructor y que sea el productor del usuario
+usersRouter.put("/editarEstado/:id", auth, verificarRolAsegurador, async (req, res) =>{
+  try {
+    const idAsegurado = req.params.id
+    const {estado} = req.body    
+    
+    if(estado !== CLIENTE_ACTIVO && estado !== CLIENTE_INACTIVO){
+      return res.status(400).send({ error: "Estado Invalido."})
+    }
+    const clienteExiste = await getUserById(idAsegurado)
+    if(!clienteExiste){
+      return res.status(404).send({ error: "El Cliente no existe."})
+    }
+
+    if(!validarAseguradorCorrecto(req, clienteExiste.asegurador)){
+      return res.status(404).send({ error: MSG_ERROR_401})
+    }
+    
+    const result = await changeState(idAsegurado, req.body)
+    res.status(200).send(result)
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+})
+
 //  Validaciones
 //  email         usuario@dominio.algo
 //  dni           numeros igual o mas de 7 numeros y igual o menos a 8
@@ -125,6 +156,7 @@ usersRouter.post('/register/client', auth,
       gender,
       role: 'asegurado',
       asegurador: aseguradorId,
+      estado: 'ACTIVO'
     };
 
     const result = await addUser(newUser);

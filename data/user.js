@@ -138,6 +138,21 @@ export async function updateUser(id, user) {
   return result.modifiedCount > 0; // Verifica si se modificó algún documento
 }
 
+export async function changeState(id, estado) {
+  const clientmongo = await getConnection();
+  const result = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION)
+    .findOneAndUpdate(
+      { _id: new ObjectId(id) },
+      { $set: estado },
+      { returnDocument: "after" }
+    );
+
+  return result;
+
+}
+
 export async function addClient(data) {
   const clientmongo = await getConnection();
   const result = await clientmongo
