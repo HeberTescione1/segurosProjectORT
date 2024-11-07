@@ -17,6 +17,9 @@ export async function addPoliza(poliza) {
       clientmongo,
       poliza.dni
     );
+    if(asegurado.estado == 'INACTIVO'){
+      throw new Error("El cliente no esta activo.");
+    }
     if (asegurado) {
       result = await guardarPoliza(clientmongo, poliza, asegurado);
     }
