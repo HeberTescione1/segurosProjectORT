@@ -24,6 +24,7 @@ import {
   verificarRolAdministrador
 } from "../middleware/roles.js"
 import validarBodyCliente from "../validaciones/validarBodyCliente.js";
+import validarAsegurador from "../validaciones/validarAsegurador.js";
 
 const usersRouter = express.Router();
 const MSG_ERROR_409 =
@@ -86,8 +87,17 @@ usersRouter.put("/editarCliente/:id", auth, verificarRolAsegurador, async (req, 
 //  dni           numeros igual o mas de 7 numeros y igual o menos a 8
 //  contraseña    Se setea contraseña "D{dni usuario}!" despues vemos
 //falta validar cuit, domicilio y no se si algo mas.
-usersRouter.post('/register/client', auth, verificarRolAsegurador, async (req, res) => {
+usersRouter.post('/register/client', auth, 
+  //verificarRolAsegurador, 
+  async (req, res) => {
+  console.log(req.body);
+  
   try {
+
+    const aseguradorId = validarAsegurador(req);
+    if (!aseguradorId) {
+      return res.status(403).send("No tienes permisos para realizar esta acción");
+    }
 
     const validationError = validarBodyCliente(req.body);
     if (validationError) {
@@ -107,6 +117,7 @@ usersRouter.post('/register/client', auth, verificarRolAsegurador, async (req, r
       email,
       name,
       lastname,
+      full_name: `${name} ${lastname}`,
       dni,
       domicile,
       phone,
