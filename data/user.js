@@ -35,7 +35,7 @@ export async function addUser(userData) {
   }
 
   const [year, month, day] = userData.date_of_birth.split('-');
-  userData.date_of_birth = `${day}-${month}-${year}`;
+  userData.date_of_birth = `${year}-${month}-${day}`;
 
   userData.asegurador = new ObjectId(userData.asegurador);
 
