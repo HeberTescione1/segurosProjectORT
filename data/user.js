@@ -6,6 +6,13 @@ import { ObjectId } from "mongodb";
 
 const DATABASE = process.env.DATABASE;
 const COLECCTION = process.env.USERS_COLECCTION;
+const EXCEPTION_STRATEGY = {
+  blocked: () => { throw new Error('Su usuario se encuentra bloqueado, consulte con su administrador.'); },
+  unverify: () => { throw new Error('Su usuario esta en proceso de verificación, aguarde la acción de su administrador.'); },
+  payment_blocked: () => { throw new Error('Su usuario se encuentra bloqueado por falta de pago.'); },
+};
+const ACTIVE_STATE = "active";
+const MAX_ATTEMPS = 3;
 
 export async function getUserByToken(token) {
   const info = jwt.decode(token);
@@ -59,10 +66,20 @@ export async function findByCredential(email, password) {
     throw new Error("Credenciales no validas");
   }
 
+  if (user.state != ACTIVE_STATE && EXCEPTION_STRATEGY[user.state]) {
+    EXCEPTION_STRATEGY[state]();
+  } 
+
   const isMatch = await bcryptjs.compare(password, user.password);
 
   if (!isMatch) {
-    throw new Error("Credenciales no validas");
+    //voy a sumar attemps a un campo attemps.
+    if(user.attemps > MAX_ATTEMPS){
+      throw new Error("Su usuario ha sido bloqueado por seguridad.");
+      //deberia pasar el usuario a bloqueado.
+    } else{
+      throw new Error("Credenciales no validas");
+    }
   }
 
   return user;
@@ -95,7 +112,7 @@ export async function updateUser(id, user) {
   const clientmongo = await getConnection();
   const query = { _id: new ObjectId(user._id) };
 
-  console.log("UpdateUser - Query:", query);
+/*   console.log("UpdateUser - Query:", query);
   console.log("UpdateUser - User object:", user);
   console.log("UpdateUser - ID:", id);
   console.log("UpdateUser - EMAIL:", user.email);
@@ -110,7 +127,7 @@ export async function updateUser(id, user) {
   console.log("UpdateUser - DOMICILIO - ZIP_CODE:", user.domicile.zip_code);
   console.log("UpdateUser - DOMICILIO - PROVINCE:", user.domicile.province);
   console.log("UpdateUser - DOMICILIO - COUNTRY:", user.domicile.country);
-  console.log("--------------------");
+  console.log("--------------------"); */
 
   const newValues = {
     $set: {
@@ -198,7 +215,6 @@ export async function getClientsByAsegurador(
     query.estado = estado;
   }
 
-  // Buscar clientes relacionados con el asegurador y los filtros aplicados
   const clients = await clientmongo
     .db(DATABASE)
     .collection(COLECCTION)
