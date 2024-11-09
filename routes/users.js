@@ -12,6 +12,7 @@ import {
   getUserById,
   changeState,
   mailExist,
+  generateTokenResetPass,
 } from "../data/user.js";
 import auth from "../middleware/auth.js";
 import validator from "validator";
@@ -43,6 +44,7 @@ const ROLE_ASEGURADO = "asegurado";
 const ROLE_ADMIN = "admin";
 const CLIENTE_ACTIVO = "ACTIVO"
 const CLIENTE_INACTIVO = "INACTIVO"
+const MSG_CHECK_EMAIL = "Revise su correo electronico. :"
 
 //no se donde se usa esto. verificar.
 usersRouter.get("/buscarCliente/:id", async (req, res) => {
@@ -287,15 +289,15 @@ usersRouter.post("/resetPassword/:email", async (req, res) => {
 try {
   const user = await mailExist(email)
 
-  const token = await generateAuthToken(user);
+  const token = await generateTokenResetPass(user);
 
-  const api = "http://localhost:3001/api/"
+  const api = process.env.API;
   const resetLink = `${api}resetPassword/?token=${token}`
 
   //TODO
   //enviar el mail con el link para resetear la password
 
-  res.status(200).send({ message: `Revise su correo electronico. : ${resetLink}` });
+  res.status(200).send({ message: `${MSG_CHECK_EMAIL} ${resetLink}` });
 } catch (error) {
   res.status(401).send(error.message)
 }

@@ -4,6 +4,8 @@ import e from "express";
 import jwt from "jsonwebtoken";
 import { ObjectId } from "mongodb";
 
+const MSG_ERROR_INVALID_MAIL = "Mail invalido."
+
 const DATABASE = process.env.DATABASE;
 const COLECCTION = process.env.USERS_COLECCTION;
 const EXCEPTION_STRATEGY = {
@@ -242,7 +244,7 @@ export async function mailExist(email) {
     .findOne({ email: email });
 
     if(result == null){
-      throw new Error("Mail invalido.")
+      throw new Error(MSG_ERROR_INVALID_MAIL)
     }
 
     return result
@@ -256,13 +258,19 @@ export async function changePassword(newPass, id) {
     .db(DATABASE)
     .collection(COLECCTION)
     .findOneAndUpdate(
-      { _id: new ObjectId(id) }, // Filtro para encontrar el usuario por ID
-      { $set: { password: newPassHash } }, // Actualización del campo password
-      { returnOriginal: true } // Opcional: devuelve el documento actualizado
-    );
-
-    console.log(result);
-    
+      { _id: new ObjectId(id) }, 
+      { $set: { password: newPassHash } }, 
+      { returnOriginal: true } 
+    );    
 
     return result  
+}
+
+export async function generateTokenResetPass(user) {
+  const token = jwt.sign(
+    { _id: user._id, email: user.email, role: user.role },
+    process.env.CLAVE_SECRETA,
+    { expiresIn: "5m" }
+  );
+  return token;
 }
