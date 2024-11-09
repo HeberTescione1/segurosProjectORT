@@ -35,7 +35,7 @@ function validarBodyCliente(body) {
 
   if (body.gender) {
     const validGenders = ["HOMBRE", "MUJER", "NO BINARIO"];
-    if (!validGenders.includes(capitalizedGender)) {
+    if (!validGenders.includes(body.gender)) {
       errors.push(
         `${fieldNames["gender"]} debe ser uno de los siguientes: Masculino, Femenino, No binario.`
       );
