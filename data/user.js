@@ -3,23 +3,46 @@ import bcryptjs from "bcryptjs";
 import e from "express";
 import jwt from "jsonwebtoken";
 import { ObjectId } from "mongodb";
+import {
+  getUserByEmail,
+  checkUserState,
+  comparePassword,
+  updateFailedAttempts,
+  initializeAttempts,
+  blockUser,
+  resetAttempts,
+} from "../utils/users.js";
+import { sendEmailToExternalAPI } from "../utils/mails.js";
 
 const DATABASE = process.env.DATABASE;
 const COLECCTION = process.env.USERS_COLECCTION;
-const EXCEPTION_STRATEGY = {
-  blocked: () => { throw new Error('Su usuario se encuentra bloqueado, consulte con su administrador.'); },
-  unverify: () => { throw new Error('Su usuario esta en proceso de verificación, aguarde la acción de su administrador.'); },
-  payment_blocked: () => { throw new Error('Su usuario se encuentra bloqueado por falta de pago.'); },
-};
 const ACTIVE_STATE = "active";
 const MAX_ATTEMPS = 3;
+const BLOCKED_STATE = "blocked";
+const MSG_BLOCKED_STATE = "Su usuario ha sido bloqueado por seguridad.";
+const MSG_INVALID_CREDENTIALS = "Credenciales no validas";
+const EXCEPTION_STRATEGY = {
+  blocked: () => {
+    throw new Error(
+      "Su usuario se encuentra bloqueado, consulte con su administrador."
+    );
+  },
+  unverify: () => {
+    throw new Error(
+      "Su usuario esta en proceso de verificación, aguarde la acción de su administrador."
+    );
+  },
+  payment_blocked: () => {
+    throw new Error("Su usuario se encuentra bloqueado por falta de pago.");
+  },
+};
 
 export async function getUserByToken(token) {
   const info = jwt.decode(token);
 
-  const {_id} = info
+  const { _id } = info;
 
-  const result = getUserById(_id)
+  const result = getUserById(_id);
   return result;
 }
 
@@ -36,52 +59,59 @@ export async function addUser(userData) {
   const clientmongo = await getConnection();
   userData.password = await bcryptjs.hash(userData.dni, 10);
 
-  const estaDuplicado = await checkDuplicateEmailOrDni(null, userData.email, userData.dni);
+  const estaDuplicado = await checkDuplicateEmailOrDni(
+    null,
+    userData.email,
+    userData.dni
+  );
   if (estaDuplicado) {
-    return { success: false, error: {error: 'El correo electrónico o DNI ya está en uso.'} };
+    throw new Error("El correo electrónico o DNI ya está en uso.");
   }
-
-  const [year, month, day] = userData.date_of_birth.split('-');
+  const [year, month, day] = userData.date_of_birth.split("-");
   userData.date_of_birth = `${year}-${month}-${day}`;
 
   userData.asegurador = new ObjectId(userData.asegurador);
-
+ 
   const result = await clientmongo
-  .db(DATABASE)
-  .collection(COLECCTION)
-  .insertOne(userData);
+    .db(DATABASE)
+    .collection(COLECCTION)
+    .insertOne(userData);
 
-  return result
+  return result;
 }
 
 export async function findByCredential(email, password) {
   const clientmongo = await getConnection();
-
-  const user = await clientmongo
-    .db(DATABASE)
-    .collection(COLECCTION)
-    .findOne({ email: email });
-
-  if (!user) {
-    throw new Error("Credenciales no validas");
-  }
-
-  if (user.state != ACTIVE_STATE && EXCEPTION_STRATEGY[user.state]) {
-    EXCEPTION_STRATEGY[state]();
-  } 
-
-  const isMatch = await bcryptjs.compare(password, user.password);
+  const user = await getUserByEmail(clientmongo, email);
+  initializeAttempts(user);
+  checkUserState(user);
+  const isMatch = await comparePassword(user, password);
 
   if (!isMatch) {
-    //voy a sumar attemps a un campo attemps.
-    if(user.attemps > MAX_ATTEMPS){
-      throw new Error("Su usuario ha sido bloqueado por seguridad.");
-      //deberia pasar el usuario a bloqueado.
-    } else{
-      throw new Error("Credenciales no validas");
+    const newAttempts = user.attemps + 1;
+
+    if (newAttempts >= MAX_ATTEMPS) {
+      await blockUser(clientmongo, email);
+      const emailData = {
+        to: user.email,
+        subject: "Bloqueo de usuario",
+        template: "usuarioBloqueado",
+        params: {
+          name: `${user.lastname}, ${user.name}`,
+        },
+      };
+      try {
+        sendEmailToExternalAPI(emailData);
+      } catch (error) {
+        console.log(error);
+      }
+      throw new Error(MSG_BLOCKED_STATE);
+    } else {
+      await updateFailedAttempts(clientmongo, email, newAttempts);
+      throw new Error(MSG_INVALID_CREDENTIALS);
     }
   }
-
+  await resetAttempts(clientmongo, email);
   return user;
 }
 
@@ -112,7 +142,7 @@ export async function updateUser(id, user) {
   const clientmongo = await getConnection();
   const query = { _id: new ObjectId(user._id) };
 
-/*   console.log("UpdateUser - Query:", query);
+  /*   console.log("UpdateUser - Query:", query);
   console.log("UpdateUser - User object:", user);
   console.log("UpdateUser - ID:", id);
   console.log("UpdateUser - EMAIL:", user.email);
@@ -167,7 +197,6 @@ export async function changeState(id, estado) {
     );
 
   return result;
-
 }
 
 export async function addClient(data) {
@@ -184,41 +213,44 @@ export async function addClient(data) {
 
 export async function getClientsByAsegurador(
   aseguradorId,
-  { search, dni, email, phone, estado }
+  { search, dni, email, phone, state }
 ) {
   const clientmongo = await getConnection();
-
-  // Crear el filtro base por asegurador y rol "asegurado"
   let query = { asegurador: new ObjectId(aseguradorId), role: "asegurado" };
 
-  // Aplicar filtros condicionalmente
+  // Construir la consulta con los filtros dados
   if (search) {
     query.$or = [
       { name: { $regex: search, $options: "i" } },
       { lastname: { $regex: search, $options: "i" } },
     ];
   }
-
   if (dni) {
-    query.dni = dni;
+    query.$or = [{ dni: { $regex: dni, $options: "i" } }];
   }
-
   if (email) {
-    query.email = email;
+    query.$or = [{ email: { $regex: email, $options: "i" } }];
   }
-
   if (phone) {
-    query.phone = phone;
+    query.$or = [{ phone: { $regex: phone, $options: "i" } }];
   }
-
-  if (estado) {
-    query.estado = estado;
+  if (state) {
+    query.state = state;
   }
 
   const clients = await clientmongo
     .db(DATABASE)
     .collection(COLECCTION)
     .find(query)
+    .project({
+      _id: 1,
+      name: 1,
+      lastname: 1,
+      dni: 1,
+      email: 1,
+      phone: 1,
+      state: 1,
+    })
     .toArray();
 
   return clients;
@@ -230,5 +262,24 @@ export async function deleteUser(id) {
     .db(DATABASE)
     .collection(COLECCTION)
     .deleteOne({ _id: new ObjectId(id) });
+  return result;
+}
+
+export async function addAsegurador(userData) {
+  const clientmongo = await getConnection();
+  const estaDuplicado = await checkDuplicateEmailOrDni(
+    null,
+    userData.email,
+    userData.dni
+  );
+  if (estaDuplicado) {
+    throw new Error("El correo electrónico o DNI ya está en uso.");
+  }
+
+  const result = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION)
+    .insertOne(userData);
+
   return result;
 }
