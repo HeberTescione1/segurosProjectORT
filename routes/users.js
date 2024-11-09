@@ -100,11 +100,8 @@ usersRouter.put(
   async (req, res) => {
     try {
       const idAsegurado = req.params.id;
-      const { estado } = req.body;
+      const { newState } = req.body;
 
-      if (estado !== CLIENTE_ACTIVO && estado !== CLIENTE_INACTIVO) {
-        return res.status(400).send({ error: "Estado Invalido." });
-      }
       const clienteExiste = await getUserById(idAsegurado);
       if (!clienteExiste) {
         return res.status(404).send({ error: "El Cliente no existe." });
@@ -114,7 +111,7 @@ usersRouter.put(
         return res.status(404).send({ error: MSG_ERROR_401 });
       }
 
-      const result = await changeState(idAsegurado, req.body);
+      const result = await changeState(idAsegurado, newState);
       res.status(200).send(result);
     } catch (error) {
       res.status(500).send(error.message);
@@ -160,7 +157,6 @@ usersRouter.post(
         apartment,
         zip_code,
       };
-
       const newUser = {
         email,
         name,
@@ -217,7 +213,7 @@ usersRouter.get("/clients", auth, verificarRolAsegurador, async (req, res) => {
       phone,
       state,
     });
-
+    console.log(clients);
     res.status(200).send(clients);
   } catch (error) {
     res.status(500).send(error.message);
@@ -242,8 +238,7 @@ usersRouter.post("/getInfoByToken", async (req, res) => {
 //  contraseña    mayuscula, caracter especial y numero, 8 o mas caracteres
 usersRouter.post("/register", async (req, res) => {
   try {
-    const errores = validarBodyRegistro(req.body);
-    console.log(errores);
+    const errores = validarBodyRegistro(req.body);;
     if (!validator.isEmpty(errores)) {
       return res.status(422).send({ error: errores });
     }

@@ -58,7 +58,6 @@ export async function getUserById(id) {
 export async function addUser(userData) {
   const clientmongo = await getConnection();
   userData.password = await bcryptjs.hash(userData.dni, 10);
-
   const estaDuplicado = await checkDuplicateEmailOrDni(
     null,
     userData.email,
@@ -71,12 +70,31 @@ export async function addUser(userData) {
   userData.date_of_birth = `${year}-${month}-${day}`;
 
   userData.asegurador = new ObjectId(userData.asegurador);
- 
+
   const result = await clientmongo
     .db(DATABASE)
     .collection(COLECCTION)
     .insertOne(userData);
 
+  const asegurador = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION)
+    .findOne({ _id: userData.asegurador });
+
+  const emailData = {
+    to: userData.email,
+    subject: "Bienvenida a SegurosOrt",
+    template: "bienvenidaAseguradoNuevo",
+    params: {
+      aseguradoName: `${userData.lastname}, ${userData.name}`,
+      aseguradorName: `${asegurador.lastname}, ${asegurador.name}`,
+    },
+  };
+  try {
+    sendEmailToExternalAPI(emailData);
+  } catch (error) {
+    console.log(error);
+  }
   return result;
 }
 
@@ -185,14 +203,14 @@ export async function updateUser(id, user) {
   return result.modifiedCount > 0; // Verifica si se modificó algún documento
 }
 
-export async function changeState(id, estado) {
+export async function changeState(id, newState) {
   const clientmongo = await getConnection();
   const result = await clientmongo
     .db(DATABASE)
     .collection(COLECCTION)
     .findOneAndUpdate(
       { _id: new ObjectId(id) },
-      { $set: estado },
+      { $set: { state: newState } },
       { returnDocument: "after" }
     );
 
@@ -275,7 +293,7 @@ export async function addAsegurador(userData) {
   if (estaDuplicado) {
     throw new Error("El correo electrónico o DNI ya está en uso.");
   }
-
+  userData.password = await bcryptjs.hash(userData.password, 10);
   const result = await clientmongo
     .db(DATABASE)
     .collection(COLECCTION)

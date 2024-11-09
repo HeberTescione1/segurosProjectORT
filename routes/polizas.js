@@ -1,5 +1,5 @@
 import express from "express";
-import { addPoliza, getPolizas,getPolizaDominio, eliminarPoliza, actualizarPoliza } from "../data/poliza.js";
+import { addPoliza, getPolizas,getPolizaDominio, eliminarPoliza, actualizarPoliza, getPolizasAsegurado } from "../data/poliza.js";
 import auth from "../middleware/auth.js";
 import { verificarRolAdministrador, verificarRolAsegurado, verificarRolAsegurador, verificarRolesPrimarios } from "../middleware/roles.js";
 import validarBodyPoliza from "../validaciones/validarBodyPoliza.js";
@@ -85,8 +85,10 @@ polizasRouter.get("/listAsegurado/:id", auth, async (req, res) => {
     console.log("Asegurado ID:", aseguradoId);
 
     const result = await getPolizasAsegurado(aseguradoId); 
+    console.log("2asd0");
     res.status(200).send(result);
   } catch (error) {
+    console.log(error);
     res.status(500).send(error.message);
   }
 });
