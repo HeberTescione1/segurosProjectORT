@@ -51,3 +51,17 @@ export async function getSolicitud(_id) {
 
   return solicitud;
 }
+
+export async function modificarEstadoSolicitud(_id, nuevoEstado) {
+    const client = await getConnection();
+    console.log("ID de la solicitud:", _id);
+    console.log("Nuevo estado:", nuevoEstado);
+    
+    const result = await client
+        .db(DATABASE)
+        .collection(COLECCION_SOLICITUDES)
+        .updateOne({ _id: new ObjectId(_id) }, { $set: { "estado": nuevoEstado } });
+
+    console.log("Resultado de la actualización:", result);
+    return result;
+}
