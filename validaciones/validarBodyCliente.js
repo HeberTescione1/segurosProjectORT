@@ -34,14 +34,11 @@ function validarBodyCliente(body) {
   });
 
   if (body.gender) {
-    const capitalizedGender = capitalizeFirstLetter(body.gender);
-    const validGenders = ["Masculino", "Femenino", "No binario"];
+    const validGenders = ["HOMBRE", "MUJER", "NO BINARIO"];
     if (!validGenders.includes(capitalizedGender)) {
       errors.push(
         `${fieldNames["gender"]} debe ser uno de los siguientes: Masculino, Femenino, No binario.`
       );
-    } else {
-      body.gender = capitalizedGender;
     }
   }
 
