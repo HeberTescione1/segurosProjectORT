@@ -53,15 +53,20 @@ export async function getSolicitud(_id) {
 }
 
 export async function modificarEstadoSolicitud(_id, nuevoEstado) {
-    const client = await getConnection();
-    console.log("ID de la solicitud:", _id);
-    console.log("Nuevo estado:", nuevoEstado);
-    
-    const result = await client
-        .db(DATABASE)
-        .collection(COLECCION_SOLICITUDES)
-        .updateOne({ _id: new ObjectId(_id) }, { $set: { "estado": nuevoEstado } });
+  try {
+      const client = await getConnection();
+      console.log("ID de la solicitud:", _id);
+      console.log("Nuevo estado:", nuevoEstado);
 
-    console.log("Resultado de la actualización:", result);
-    return result;
+      const result = await client
+          .db(DATABASE)
+          .collection(COLECCTION_SOLICITUDES)
+          .updateOne({ _id: new ObjectId(_id) }, { $set: { "estado": nuevoEstado } });
+
+      console.log("Resultado de la actualización:", result);
+      return result;
+  } catch (error) {
+      console.error("Error al actualizar el estado de la solicitud:", error);
+      return null;
+  }
 }
