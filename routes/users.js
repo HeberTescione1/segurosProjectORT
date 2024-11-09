@@ -296,9 +296,7 @@ try {
   const user = await mailExist(email)
 
   const token = await generateTokenResetPass(user);
-
-  const api = process.env.API;
-  const resetLink = `${api}resetPassword/?token=${token}`
+  const resetLink = `http://localhost:3000/recuperarContrasenia?token=${token}`
 
   //TODO
   //enviar el mail con el link para resetear la password
