@@ -13,6 +13,7 @@ import {
   changeState,
   mailExist,
   generateTokenResetPass,
+  changePassword,
 } from "../data/user.js";
 import auth from "../middleware/auth.js";
 import validator from "validator";
@@ -30,6 +31,7 @@ import {
 import validarBodyCliente from "../validaciones/validarBodyCliente.js";
 import validarAsegurador from "../validaciones/validarAsegurador.js";
 import validarAseguradorCorrecto from "../validaciones/validarAseguradorCorrecto.js";
+import validarDuenio from "../validaciones/validarDuenio.js";
 
 const usersRouter = express.Router();
 const MSG_ERROR_409 =
@@ -45,6 +47,9 @@ const ROLE_ADMIN = "admin";
 const CLIENTE_ACTIVO = "ACTIVO"
 const CLIENTE_INACTIVO = "INACTIVO"
 const MSG_CHECK_EMAIL = "Revise su correo electronico. :"
+const MSG_ERROR_INVALID_PERMISSIONS = "No tienes permiso para realizar esta accion."
+const MSG_ERROR_DIFFERENT_PASSWORDS = "Las contraseñas no son iguales."
+const MSG_SUCCESSFUL_CHANGE = "Contraseña cambiada con exito."
 
 //no se donde se usa esto. verificar.
 usersRouter.get("/buscarCliente/:id", async (req, res) => {
@@ -304,5 +309,26 @@ try {
 
 
 })
+
+usersRouter.post("/changePassword/:id", auth, async (req, res) => {
+  const { id } = req.params;
+  const {newPass, confirmPassword} = req.body
+
+  try {
+    if (!validarDuenio(id, req)) {
+      return res.status(403).json({ error: MSG_ERROR_INVALID_PERMISSIONS });
+    }
+
+    if(newPass !== confirmPassword){
+      throw new Error(MSG_ERROR_DIFFERENT_PASSWORDS)
+    }
+
+    await changePassword(newPass , id)
+
+    res.status(200).send({message: MSG_SUCCESSFUL_CHANGE})
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 export default usersRouter;
