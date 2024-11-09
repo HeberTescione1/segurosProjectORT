@@ -13,9 +13,9 @@ const ROLE_ASEGURADOR = "asegurado"
 solicitudesRouter.get("/list", auth, async (req, res) => {
     try {
         const { _id, role } = req.user;
-        const { nombrePropietarioAsegurado, estadoSolicitud, fechaDesde, fechaHasta } = req.query;
+        const { nombrePropietarioAsegurado, estadoSolicitud, fechaOcurrencia} = req.query;
 
-        const result = await getSolicitudes(_id, role, { nombrePropietarioAsegurado, estadoSolicitud, fechaDesde, fechaHasta });
+        const result = await getSolicitudes(_id, role, { nombrePropietarioAsegurado, estadoSolicitud, fechaOcurrencia });
         res.status(200).send(result);
     } catch (error) {
         res.status(500).send(error.message);

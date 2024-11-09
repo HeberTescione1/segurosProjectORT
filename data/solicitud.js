@@ -17,13 +17,10 @@ export async function getSolicitudes(_id, role, filtros = {}) {
   if (filtros.estadoSolicitud) {
       query.estado = filtros.estadoSolicitud;
   }
-  if (filtros.fechaDesde || filtros.fechaHasta) {
+  if (filtros.fechaOcurrencia) {
       query["datosSiniestro.fechaOcurrencia"] = {};
-      if (filtros.fechaDesde) {
-          query["datosSiniestro.fechaOcurrencia"].$gte = filtros.fechaDesde;
-      }
-      if (filtros.fechaHasta) {
-          query["datosSiniestro.fechaOcurrencia"].$lte = filtros.fechaHasta;
+      if (filtros.fechaOcurrencia) {
+          query["datosSiniestro.fechaOcurrencia"].$gte = filtros.fechaOcurrencia;
       }
     }
     return await collection.find(query).toArray();

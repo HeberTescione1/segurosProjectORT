@@ -5,8 +5,8 @@ import Joi from "joi";
 export const esquemaDomicilio = Joi.object({
     address: Joi.string().required(),
     number: Joi.number().required(),
-    floor: Joi.number(),
-    apartment: Joi.string(),
+    floor: Joi.number().allow(null, ""),
+    apartment: Joi.string().allow(null, ""),
     zip_code: Joi.number().required(),
 
 })
