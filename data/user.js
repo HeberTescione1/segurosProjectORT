@@ -232,3 +232,37 @@ export async function deleteUser(id) {
     .deleteOne({ _id: new ObjectId(id) });
   return result;
 }
+
+export async function mailExist(email) {
+
+  const clientmongo = await getConnection();
+  const result = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION)
+    .findOne({ email: email });
+
+    if(result == null){
+      throw new Error("Mail invalido.")
+    }
+
+    return result
+}
+
+export async function changePassword(newPass, id) { 
+  const clientmongo = await getConnection();
+  const newPassHash = await bcryptjs.hash(newPass, 10);
+
+  const result = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION)
+    .findOneAndUpdate(
+      { _id: new ObjectId(id) }, // Filtro para encontrar el usuario por ID
+      { $set: { password: newPassHash } }, // Actualización del campo password
+      { returnOriginal: true } // Opcional: devuelve el documento actualizado
+    );
+
+    console.log(result);
+    
+
+    return result  
+}

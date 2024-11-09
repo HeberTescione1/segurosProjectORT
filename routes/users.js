@@ -11,6 +11,7 @@ import {
   deleteUser,
   getUserById,
   changeState,
+  mailExist,
 } from "../data/user.js";
 import auth from "../middleware/auth.js";
 import validator from "validator";
@@ -279,5 +280,27 @@ usersRouter.post("/login", acceso, async (req, res) => {
     res.status(401).send(error.message);
   }
 });
+
+usersRouter.post("/resetPassword/:email", async (req, res) => {
+  const email = req.params.email
+
+try {
+  const user = await mailExist(email)
+
+  const token = await generateAuthToken(user);
+
+  const api = "http://localhost:3001/api/"
+  const resetLink = `${api}resetPassword/?token=${token}`
+
+  //TODO
+  //enviar el mail con el link para resetear la password
+
+  res.status(200).send({ message: `Revise su correo electronico. : ${resetLink}` });
+} catch (error) {
+  res.status(401).send(error.message)
+}
+
+
+})
 
 export default usersRouter;
