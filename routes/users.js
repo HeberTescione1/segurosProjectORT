@@ -21,6 +21,7 @@ import {
   validarContrasena,
   validarBodyRegistro,
   validarBodySinPassword,
+  validateOldPassword,
 } from "../validaciones/validaciones.js";
 import acceso from "../middleware/acceso.js";
 import {
@@ -312,7 +313,7 @@ try {
 
 usersRouter.post("/changePassword/:id", auth, async (req, res) => {
   const { id } = req.params;
-  const {newPass, confirmPassword} = req.body
+  const {oldPass ,newPass, confirmPassword} = req.body
 
   try {
     if (!validarDuenio(id, req)) {
@@ -321,6 +322,10 @@ usersRouter.post("/changePassword/:id", auth, async (req, res) => {
 
     if(newPass !== confirmPassword){
       throw new Error(MSG_ERROR_DIFFERENT_PASSWORDS)
+    }
+
+    if(!await validateOldPassword(id, oldPass, newPass)){
+      throw new Error("Contaseña antigua incorrecta.")
     }
 
     await changePassword(newPass , id)

@@ -274,3 +274,4 @@ export async function generateTokenResetPass(user) {
   );
   return token;
 }
+
