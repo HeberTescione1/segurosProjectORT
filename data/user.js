@@ -112,23 +112,6 @@ export async function updateUser(id, user) {
   const clientmongo = await getConnection();
   const query = { _id: new ObjectId(user._id) };
 
-/*   console.log("UpdateUser - Query:", query);
-  console.log("UpdateUser - User object:", user);
-  console.log("UpdateUser - ID:", id);
-  console.log("UpdateUser - EMAIL:", user.email);
-  console.log("UpdateUser - NAME:", user.name);
-  console.log("UpdateUser - LASTNAME:", user.lastname);
-  console.log("UpdateUser - DNI:", user.dni);
-  console.log("UpdateUser - PHONE:", user.phone);
-  console.log("UpdateUser - CUIT:", user.cuit);
-
-  console.log("--------------------");  
-  console.log("UpdateUser - DOMICILIO - ADDRESS:", user.domicile.address);
-  console.log("UpdateUser - DOMICILIO - ZIP_CODE:", user.domicile.zip_code);
-  console.log("UpdateUser - DOMICILIO - PROVINCE:", user.domicile.province);
-  console.log("UpdateUser - DOMICILIO - COUNTRY:", user.domicile.country);
-  console.log("--------------------"); */
-
   const newValues = {
     $set: {
       email: user.email,
@@ -145,8 +128,6 @@ export async function updateUser(id, user) {
       },
     },
   };
-
-  console.log("UpdateUser - New Values:", newValues);
 
   const result = await clientmongo
     .db(DATABASE)

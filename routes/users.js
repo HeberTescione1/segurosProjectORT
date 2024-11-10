@@ -121,8 +121,6 @@ usersRouter.put("/editarEstado/:id", auth, verificarRolAsegurador, async (req, r
 usersRouter.post('/register/client', auth, 
   //verificarRolAsegurador, 
   async (req, res) => {
-  console.log(req.body);
-  
   try {
 
     const aseguradorId = validarAsegurador(req);
@@ -202,8 +200,6 @@ usersRouter.get("/clients", auth, verificarRolAsegurador, async (req, res) => {
     });
 
     res.status(200).send(clients);
-    //console.log(clients);
-    
   } catch (error) {
     res.status(500).send(error.message);
   }
