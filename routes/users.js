@@ -312,7 +312,7 @@ try {
 
   res.status(200).send({ message: `${MSG_CHECK_EMAIL} ${resetLink}` });
 } catch (error) {
-  res.status(401).send(error.message)
+  res.status(401).send({ error: error.message })
 }
 
 
