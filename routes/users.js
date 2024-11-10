@@ -309,8 +309,11 @@ try {
 
 })
 
-usersRouter.post("/changePassword/:id", auth, async (req, res) => {
-  const { id } = req.params;
+usersRouter.post("/changePassword/:token", auth, async (req, res) => {
+  const user = await getUserByToken(req.params.token)
+  const { _id } = user;
+  const id = _id.toString()
+  
   const {oldPass ,newPass, confirmPassword} = req.body
 
   try {

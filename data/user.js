@@ -21,7 +21,8 @@ export async function getUserByToken(token) {
 
   const {_id} = info
 
-  const result = getUserById(_id)
+  const result = await getUserById(_id)
+  
   return result;
 }
 
