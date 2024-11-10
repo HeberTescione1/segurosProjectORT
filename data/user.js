@@ -39,6 +39,39 @@ const EXCEPTION_STRATEGY = {
   },
 };
 
+const TRANSITION_STRATEGIES = {
+  unverify_to_active: () => {
+    return {
+      emailTemplate: "usuarioVerificado",
+      subject: "Verificación exitosa",
+      refreshPassword: false,
+    };
+  },
+
+  blocked_to_active: () => {
+    return {
+      emailTemplate: "usuarioReactivado",
+      subject: "Usuario activado",
+      refreshPassword: true,
+    };
+  },
+
+  active_to_payment_blocked: () => {
+    return {
+      emailTemplate: "usuarioNoPago",
+      subject: "Suscripción impaga",
+      refreshPassword: false,
+    };
+  },
+  payment_blocked_to_active: () => {
+    return {
+      emailTemplate: "usuarioPago",
+      subject: "Reactivación de cuenta por pago existoso",
+      refreshPassword: false,
+    };
+  },
+};
+
 export async function getUserByToken(token) {
   const info = jwt.decode(token);
 
@@ -206,17 +239,42 @@ export async function updateUser(id, user) {
   return result.modifiedCount > 0; // Verifica si se modificó algún documento
 }
 
-export async function changeState(id, newState) {
+export async function changeState(user, newState) {
+  const transitionKey = `${user.state}_to_${newState}`;
+  let transition = null;
+  let query = { $set: { state: newState, attempts: 0 } };
+  let emailData = null;
+  if (TRANSITION_STRATEGIES[transitionKey]) {
+    transition = TRANSITION_STRATEGIES[transitionKey]();
+    emailData = {
+      to: user.email,
+      subject: transition.subject,
+      template: transition.emailTemplate,
+      params: {
+        name: `${user.lastname}, ${user.name}`,
+      },
+    };
+    if (transition.refreshPassword) {
+      const newPassword = Math.random().toString(36).slice(-8);
+      const hashedPassword = await bcryptjs.hash(newPassword, 10);
+      query.$set.password = hashedPassword;
+      emailData.params.newPassword = newPassword;
+    }
+  } else {
+    throw new Error("No existe la transicion de estados que desea realizar.");
+  }
   const clientmongo = await getConnection();
   const result = await clientmongo
     .db(DATABASE)
     .collection(COLECCTION)
-    .findOneAndUpdate(
-      { _id: new ObjectId(id) },
-      { $set: { state: newState } },
-      { returnDocument: "after" }
-    );
-
+    .findOneAndUpdate({ _id: new ObjectId(user._id) }, query, {
+      returnDocument: "after",
+    });
+  try {
+    sendEmailToExternalAPI(emailData);
+  } catch (error) {
+    console.log(error);
+  }
   return result;
 }
 
@@ -344,5 +402,42 @@ export async function addAsegurador(userData) {
     .insertOne(userData);
 
   return result;
+}
+
+
+export async function getAseguradores(search, dni, email, state) {
+  let query = { role: "asegurador" };
+  if (search) {
+    query.$or = [
+      { name: { $regex: search, $options: "i" } },
+      { lastname: { $regex: search, $options: "i" } },
+    ];
+  }
+  if (dni) {
+    query.$or = [{ dni: { $regex: dni, $options: "i" } }];
+  }
+  if (email) {
+    query.$or = [{ email: { $regex: email, $options: "i" } }];
+  }
+  if (state) {
+    query.state = state;
+  }
+  const clientmongo = await getConnection();
+  const clients = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION)
+    .find(query)
+    .project({
+      _id: 1,
+      name: 1,
+      lastname: 1,
+      dni: 1,
+      email: 1,
+      phone: 1,
+      state: 1,
+    })
+    .toArray();
+
+  return clients;
 }
 
