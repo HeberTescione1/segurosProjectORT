@@ -1,7 +1,5 @@
 import validator from "validator";
-import bcryptjs from "bcryptjs";
 import {esquemaSolicitud } from "./esquemas.js";
-import { findByCredential, getUserById } from "../data/user.js";
 
 export function validarContrasena(contrasena) {
   const mayuscula = /[A-Z]/.test(contrasena);
@@ -71,14 +69,4 @@ const validarSolicitud = (req, res, next) => {
     next();
   };
 
-  
   export default validarSolicitud
-
-export const validateOldPassword = async (id, oldPass, newPass) =>{ 
-  const user = await getUserById(id)
-  console.log(oldPass);
-  
-  const isMatch = await bcryptjs.compare(oldPass, user.password)
-  return isMatch
-}
-
