@@ -12,6 +12,7 @@ import {
   getUserById,
   changeState,
   addAsegurador,
+  getAseguradores,
 } from "../data/user.js";
 import auth from "../middleware/auth.js";
 import validator from "validator";
@@ -111,7 +112,7 @@ usersRouter.put(
         return res.status(404).send({ error: MSG_ERROR_401 });
       }
 
-      const result = await changeState(idAsegurado, newState);
+      const result = await changeState(clienteExiste, newState);
       res.status(200).send(result);
     } catch (error) {
       res.status(500).send(error.message);
@@ -213,7 +214,6 @@ usersRouter.get("/clients", auth, verificarRolAsegurador, async (req, res) => {
       phone,
       state,
     });
-    console.log(clients);
     res.status(200).send(clients);
   } catch (error) {
     res.status(500).send(error.message);
@@ -238,7 +238,7 @@ usersRouter.post("/getInfoByToken", async (req, res) => {
 //  contraseña    mayuscula, caracter especial y numero, 8 o mas caracteres
 usersRouter.post("/register", async (req, res) => {
   try {
-    const errores = validarBodyRegistro(req.body);;
+    const errores = validarBodyRegistro(req.body);
     if (!validator.isEmpty(errores)) {
       return res.status(422).send({ error: errores });
     }
@@ -288,5 +288,45 @@ usersRouter.post("/login", acceso, async (req, res) => {
     res.status(401).send(error.message);
   }
 });
+
+usersRouter.get(
+  "/getAseguradores",
+  auth,
+  verificarRolAdministrador,
+  async (req, res) => {
+    try {
+      const { search, dni, email, state } = req.query;
+      const aseguradores = await getAseguradores(search, dni, email, state);
+      res.status(200).send(aseguradores);
+    } catch (error) {
+      res.status(500).send(error.message);
+    }
+  }
+);
+
+usersRouter.put(
+  "/editarEstadoAsegurador/:id",
+  auth,
+  verificarRolAdministrador,
+  async (req, res) => {
+    try {
+      const idAsegurador = req.params.id;
+      const { newState } = req.body;
+
+      const aseguradorExiste = await getUserById(idAsegurador);
+      if (!aseguradorExiste) {
+        return res.status(404).send({ error: "El usuario no existe." });
+      }
+      if(aseguradorExiste.role !== "asegurador"){
+        return res.status(404).send({ error: "El usuario al que intento acceder no es asegurador"});
+      }
+
+      const result = await changeState(aseguradorExiste, newState);
+      res.status(200).send(result);
+    } catch (error) {
+      res.status(500).send(error.message);
+    }
+  }
+);
 
 export default usersRouter;
