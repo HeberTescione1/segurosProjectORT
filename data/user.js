@@ -14,6 +14,8 @@ import {
 } from "../utils/users.js";
 import { sendEmailToExternalAPI } from "../utils/mails.js";
 
+const MSG_ERROR_INVALID_MAIL = "Mail invalido."
+
 const DATABASE = process.env.DATABASE;
 const COLECCTION = process.env.USERS_COLECCTION;
 const ACTIVE_STATE = "active";
@@ -75,8 +77,9 @@ export async function getUserByToken(token) {
 
   const { _id } = info;
 
-  const result = getUserById(_id);
-  return result;
+  const result = await getUserById(_id)
+
+  return result
 }
 
 export async function getUserById(id) {
@@ -341,6 +344,47 @@ export async function deleteUser(id) {
   return result;
 }
 
+export async function mailExist(email) {
+
+  const clientmongo = await getConnection();
+  const result = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION)
+    .findOne({ email: email });
+
+    if(result == null){
+      throw new Error(MSG_ERROR_INVALID_MAIL)
+    }
+
+    return result
+}
+
+export async function changePassword(newPass, id) { 
+  const clientmongo = await getConnection();
+  const newPassHash = await bcryptjs.hash(newPass, 10);
+
+  const result = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION)
+    .findOneAndUpdate(
+      { _id: new ObjectId(id) }, 
+      { $set: { password: newPassHash } }, 
+      { returnOriginal: true } 
+    );    
+
+    return result  
+}
+
+export async function generateTokenResetPass(user) {
+  const token = jwt.sign(
+    { _id: user._id, email: user.email, role: user.role },
+    process.env.CLAVE_SECRETA,
+    { expiresIn: "5m" }
+  );
+  return token;
+}
+
+
 export async function addAsegurador(userData) {
   const clientmongo = await getConnection();
   const estaDuplicado = await checkDuplicateEmailOrDni(
@@ -359,6 +403,7 @@ export async function addAsegurador(userData) {
 
   return result;
 }
+
 
 export async function getAseguradores(search, dni, email, state) {
   let query = { role: "asegurador" };
@@ -395,3 +440,4 @@ export async function getAseguradores(search, dni, email, state) {
 
   return clients;
 }
+
