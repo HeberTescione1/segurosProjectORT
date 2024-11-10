@@ -46,6 +46,7 @@ export async function getUserByToken(token) {
 
   const result = await getUserById(_id)
 
+  return result
 }
 
 export async function getUserById(id) {
