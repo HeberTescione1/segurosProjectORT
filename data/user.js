@@ -46,6 +46,8 @@ export async function getUserByToken(token) {
 
   const result = await getUserById(_id)
 
+}
+
 export async function getUserById(id) {
   const client = await getConnection();
   const user = await client
