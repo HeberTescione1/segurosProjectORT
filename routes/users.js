@@ -11,6 +11,9 @@ import {
   deleteUser,
   getUserById,
   changeState,
+  mailExist,
+  generateTokenResetPass,
+  changePassword,
 } from "../data/user.js";
 import auth from "../middleware/auth.js";
 import validator from "validator";
@@ -18,6 +21,7 @@ import {
   validarContrasena,
   validarBodyRegistro,
   validarBodySinPassword,
+  validateOldPassword,
 } from "../validaciones/validaciones.js";
 import acceso from "../middleware/acceso.js";
 import {
@@ -28,6 +32,7 @@ import {
 import validarBodyCliente from "../validaciones/validarBodyCliente.js";
 import validarAsegurador from "../validaciones/validarAsegurador.js";
 import validarAseguradorCorrecto from "../validaciones/validarAseguradorCorrecto.js";
+import validarDuenio from "../validaciones/validarDuenio.js";
 
 const usersRouter = express.Router();
 const MSG_ERROR_409 =
@@ -42,6 +47,10 @@ const ROLE_ASEGURADO = "asegurado";
 const ROLE_ADMIN = "admin";
 const CLIENTE_ACTIVO = "ACTIVO"
 const CLIENTE_INACTIVO = "INACTIVO"
+const MSG_CHECK_EMAIL = "Revise su correo electronico. :"
+const MSG_ERROR_INVALID_PERMISSIONS = "No tienes permiso para realizar esta accion."
+const MSG_ERROR_DIFFERENT_PASSWORDS = "Las contraseñas no son iguales."
+const MSG_SUCCESSFUL_CHANGE = "Contraseña cambiada con exito."
 
 //no se donde se usa esto. verificar.
 usersRouter.get("/buscarCliente/:id", async (req, res) => {
@@ -277,6 +286,54 @@ usersRouter.post("/login", acceso, async (req, res) => {
     res.status(200).send({ token });
   } catch (error) {
     res.status(401).send(error.message);
+  }
+});
+
+usersRouter.post("/resetPassword/:email", async (req, res) => {
+  const email = req.params.email
+
+try {
+  const user = await mailExist(email)
+
+  const token = await generateTokenResetPass(user);
+  const resetLink = `http://localhost:3000/recuperarContrasenia?token=${token}`
+
+  //TODO
+  //enviar el mail con el link para resetear la password
+
+  res.status(200).send({ message: `${MSG_CHECK_EMAIL} ${resetLink}` });
+} catch (error) {
+  res.status(401).send(error.message)
+}
+
+
+})
+
+usersRouter.post("/changePassword/:token", auth, async (req, res) => {
+  const user = await getUserByToken(req.params.token)
+  const { _id } = user;
+  const id = _id.toString()
+  
+  const {oldPass ,newPass, confirmPassword} = req.body
+
+  try {
+    if (!validarDuenio(id, req)) {
+      return res.status(403).json({ error: MSG_ERROR_INVALID_PERMISSIONS });
+    }
+
+    if(newPass !== confirmPassword){
+      throw new Error(MSG_ERROR_DIFFERENT_PASSWORDS)
+    }
+
+    if(!await validateOldPassword(id, oldPass, newPass)){
+      throw new Error("Contaseña antigua incorrecta.")
+    }
+
+    await changePassword(newPass , id)
+
+    res.status(200).send({message: MSG_SUCCESSFUL_CHANGE})
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
