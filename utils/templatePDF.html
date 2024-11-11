@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Denuncia Siniestro Automotor</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        color: #333;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .header,
+      .footer {
+        text-align: center;
+        font-size: 0.8em;
+        color: #999;
+      }
+      .header img {
+        height: 50px;
+      }
+      .title {
+        background-color: #e30613;
+        color: white;
+        padding: 8px;
+        font-weight: bold;
+        text-align: center;
+        margin-top: 20px;
+      }
+      .section {
+        margin-bottom: 20px;
+        border: 1px solid #ddd;
+        padding: 10px;
+        margin-top: 30px;
+      }
+      .section-title {
+        background-color: #e30613;
+        color: white;
+        padding: 5px;
+        font-weight: bold;
+        text-align: center;
+      }
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+      .table th,
+      .table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        font-size: 0.9em;
+        text-align: left;
+      }
+      .table th {
+        background-color: #f5f5f5;
+        font-weight: bold;
+      }
+      .notes {
+        font-size: 0.9em;
+        margin-top: 10px;
+      }
+      .notes ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      /* Cambiado el color del h1 a negro */
+      h1 {
+        text-align: center;
+        color: black; /* Color negro */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Encabezado -->
+      <div class="header">
+        <img src="logo.png" alt="Lisser Group" />
+        <p>Fecha de denuncia ___/___/____</p>
+      </div>
+
+      <h1>DENUNCIA SINIESTRO AUTOMOTOR</h1>
+
+      <!-- datos del siniestro -->
+      <div class="section">
+        <div class="section-title">DATOS DEL SINIESTRO</div>
+        <table class="table">
+          <tr>
+            <td>N° de Póliza: 12321323</td>
+          </tr>
+          <tr>
+            <td>Aseguradora: Aseguradora</td>
+          </tr>
+          <tr>
+            <td>
+              Fecha: {{datosSiniestro.fecha}} Hora: {{datosSiniestro.hora}}
+            </td>
+          </tr>
+          <tr>
+            <td>Lugar ocurrencia: {{datosSiniestro.lugar}}</td>
+          </tr>
+          <tr>
+            <td>CP: {{datosSiniestro.cp}}</td>
+          </tr>
+          <tr>
+            <td>
+              Cantidad de Autos que participaron en el siniestro:
+              {{datosSiniestro.cantAutos}}
+            </td>
+          </tr>
+        </table>
+      </div>
+      <!-- info adicional -->
+      <div class="section">
+        <div class="section-title">INFORMACIÓN ADICIONAL</div>
+        <table class="table">
+          <tr>
+            <td>
+              Daños personales: {{#if informacionAdicional.daniosPersonales}}Sí{{else}}No{{/if}}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Daños materiales: {{#if informacionAdicional.daniosMateriales}}Sí{{else}}No{{/if}}
+            </td>
+          </tr>
+          <tr>
+            <td>¿Denuncia policial?: {{informacionAdicional.denuncia}}</td>
+          </tr>
+          <tr>
+            <td>Testigos: {{#if informacionAdicional.testigos}}Sí{{else}}No{{/if}}</td>
+          </tr>
+        </table>
+      </div>
+      <!-- datos propietario asegurado -->
+      <div class="section">
+        <div class="section-title">
+          DATOS DEL PROPIETARIO DEL VEHÍCULO ASEGURADO
+        </div>
+        <table class="table">
+          <tr>
+            <td>Sr/a: {{datosPropietarioVehiculoAsegurado.nombre}}</td>
+          </tr>
+          <tr>
+            <td>Domicilio: {{datosPropietarioVehiculoAsegurado.domicilio}}</td>
+          </tr>
+          <tr>
+            <td>C.P: {{datosPropietarioVehiculoAsegurado.cp}}</td>
+          </tr>
+          <tr>
+            <td>DNI: {{datosPropietarioVehiculoAsegurado.dni}}</td>
+          </tr>
+          <tr>
+            <td>Email: {{datosPropietarioVehiculoAsegurado.email}}</td>
+          </tr>
+          <tr>
+            <td>Teléfono: {{datosPropietarioVehiculoAsegurado.telefono}}</td>
+          </tr>
+          <tr>
+            <td>
+              Marca y modelo: {{datosPropietarioVehiculoAsegurado.marcaModelo}}
+            </td>
+          </tr>
+          <tr>
+            <td>Color: {{datosPropietarioVehiculoAsegurado.color}}</td>
+          </tr>
+          <tr>
+            <td>Año: {{datosPropietarioVehiculoAsegurado.anio}}</td>
+          </tr>
+          <tr>
+            <td>Dominio: {{datosPropietarioVehiculoAsegurado.dominio}}</td>
+          </tr>
+          <tr>
+            <td>Uso del vehículo: {{datosPropietarioVehiculoAsegurado.uso}}</td>
+          </tr>
+        </table>
+      </div>
+      <!-- datos propietario del otro -->
+      <div class="section">
+        <div class="section-title">DATOS DEL PROPIETARIO DEL OTRO VEHÍCULO</div>
+        <table class="table">
+          <tr>
+            <td>Sr/a: {{datosPropietarioDelOtroVehiculo.nombre}}</td>
+          </tr>
+          <tr>
+            <td>Domicilio: {{datosPropietarioDelOtroVehiculo.domicilio}}</td>
+          </tr>
+          <tr>
+            <td>C.P: {{datosPropietarioDelOtroVehiculo.cp}}</td>
+          </tr>
+          <tr>
+            <td>DNI: {{datosPropietarioDelOtroVehiculo.dni}}</td>
+          </tr>
+          <tr>
+            <td>Email: {{datosPropietarioDelOtroVehiculo.email}}</td>
+          </tr>
+          <tr>
+            <td>Teléfono: {{datosPropietarioDelOtroVehiculo.telefono}}</td>
+          </tr>
+          <tr>
+            <td>
+              Marca y modelo: {{datosPropietarioDelOtroVehiculo.marcaModelo}}
+            </td>
+          </tr>
+          <tr>
+            <td>Color: {{datosPropietarioVehiculoAsegurado.color}}</td>
+          </tr>
+          <tr>
+            <td>Año: {{datosPropietarioDelOtroVehiculo.anio}}</td>
+          </tr>
+          <tr>
+            <td>Dominio: {{datosPropietarioDelOtroVehiculo.dominio}}</td>
+          </tr>
+          <tr>
+            <td>
+              Aseguradora: {{datosPropietarioDelOtroVehiculo.aseguradora}}
+            </td>
+          </tr>
+          <tr>
+            <td>Poliza: {{datosPropietarioDelOtroVehiculo.poliza}}</td>
+          </tr>
+          <tr>
+            <td>
+              Fecha vencimiento:
+              {{datosPropietarioDelOtroVehiculo.fechaVencimiento}}
+            </td>
+          </tr>
+        </table>
+      </div>
+      <!-- conductor vehiculo asegurado -->
+      <div class="section">
+        <div class="section-title">DATOS DEL CONDUCTOR DEL ASEGURADO</div>
+        <table class="table">
+          <tr>
+            <td>Sr/a: {{conductorAsegurado.nombre}}</td>
+          </tr>
+          <tr>
+            <td>Domicilio: {{conductorAsegurado.domicilio}}</td>
+          </tr>
+          <tr>
+            <td>C.P: {{conductorAsegurado.cp}}</td>
+          </tr>
+          <tr>
+            <td>DNI: {{conductorAsegurado.dni}}</td>
+          </tr>
+          <tr>
+            <td>Fecha nacimiento: {{conductorAsegurado.fechaNacimiento}}</td>
+          </tr>
+          <tr>
+            <td>Teléfono: {{conductorAsegurado.telefono}}</td>
+          </tr>
+          <tr>
+            <td>Sexo: {{conductorAsegurado.sexo}}</td>
+          </tr>
+          <tr>
+            <td>Email: {{conductorAsegurado.email}}</td>
+          </tr>
+          <tr>
+            <td>N° Registro: {{conductorAsegurado.nroRegistro}}</td>
+          </tr>
+          <tr>
+            <td>Clase: {{conductorAsegurado.clase}}</td>
+          </tr>
+          <tr>
+            <td>Fecha expedición: {{conductorAsegurado.fechaExp}}</td>
+          </tr>
+          <tr>
+            <td>Fecha vencimiento: {{conductorAsegurado.fechaVen}}</td>
+          </tr>
+          <tr>
+            <td>Relación con el asegurado: {{conductorAsegurado.relacion}}</td>
+          </tr>
+        </table>
+      </div>
+      <!-- conductor del otro vehiculo -->
+      <div class="section">
+        <div class="section-title">DATOS DEL CONDUCTOR DEL OTRO VEHICULO</div>
+        <table class="table">
+          <tr>
+            <td>Sr/a: {{conductorAfectado.nombre}}</td>
+          </tr>
+          <tr>
+            <td>Domicilio: {{conductorAfectado.domicilio}}</td>
+          </tr>
+          <tr>
+            <td>C.P: {{conductorAfectado.cp}}</td>
+          </tr>
+          <tr>
+            <td>DNI: {{conductorAfectado.dni}}</td>
+          </tr>
+          <tr>
+            <td>Fecha nacimiento: {{conductorAfectado.fechaNacimiento}}</td>
+          </tr>
+          <tr>
+            <td>Teléfono: {{conductorAfectado.telefono}}</td>
+          </tr>
+          <tr>
+            <td>Sexo: {{conductorAfectado.sexo}}</td>
+          </tr>
+          <tr>
+            <td>Email: {{conductorAfectado.email}}</td>
+          </tr>
+          <tr>
+            <td>N° Registro: {{conductorAfectado.nroRegistro}}</td>
+          </tr>
+          <tr>
+            <td>Clase: {{conductorAfectado.clase}}</td>
+          </tr>
+          <tr>
+            <td>Fecha expedición: {{conductorAfectado.fechaExp}}</td>
+          </tr>
+          <tr>
+            <td>Fecha vencimiento: {{conductorAfectado.fechaVen}}</td>
+          </tr>
+          <tr>
+            <td>Relación con el asegurado: {{conductorAfectado.relacion}}</td>
+          </tr>
+        </table>
+      </div>
+      <!--  danios vehiculo asegurado -->
+      <div class="section">
+        <div class="section-title">DAÑOS VEHICULO DEL ASEGURADO</div>
+        <table class="table">
+          <tr>
+            <td>{{daniosAsegurado}}</td>
+          </tr>
+        </table>
+      </div>
+      <!--  danios vehiculo afectado -->
+      <div class="section">
+        <div class="section-title">DAÑOS VEHICULO DEL ASEGURADO</div>
+        <table class="table">
+          <tr>
+            <td>{{daniosAfectado}}</td>
+          </tr>
+        </table>
+      </div>
+      <!--  datos adicionales -->
+      <div class="section">
+        <div class="section-title">DATOS ADICIONALES</div>
+        <table class="table">
+          <tr>
+            <td>Tipo de camino: {{datosAdicionales.tipoCamino}}</td>
+          </tr>
+          <tr>
+            <td>Estado del tiempo: {{datosAdicionales.estadoTiempo}}</td>
+          </tr>
+          <tr>
+            <td>
+              ¿Asistió grua?: {{#if datosAdicionales.grua}}Sí{{else}}No{{/if}}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              ¿Asistió ambulancia?: {{#if
+              datosAdicionales.ambulancia}}Sí{{else}}No{{/if}}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              ¿Asistió bomberos?: {{#if
+              datosAdicionales.bomberos}}Sí{{else}}No{{/if}}
+            </td>
+          </tr>
+          <tr>
+            <td>Observaciones: {{datosAdicionales.observaciones}}</td>
+          </tr>
+        </table>
+      </div>
+      <!--  relato del siniestro -->
+      <div class="section">
+        <div class="section-title">RELATO DEL SINIESTRO</div>
+        <table class="table">
+          <tr>
+            <td>{{relato}}</td>
+          </tr>
+        </table>
+      </div>
+      <!-- consecuencias -->
+      <div class="section">
+        <div class="section-title">CONSECUENCIAS DEL SINIESTRO</div>
+        <table class="table">
+          <tr>
+            <td>
+              Daño parcial: {{#if
+              consecuencias.danioParcial}}Sí{{else}}No{{/if}}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Daño a terceros: {{#if
+              consecuencias.danioTerceros}}Sí{{else}}No{{/if}}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Destrucción total: {{#if
+              consecuencias.destruccionTotal}}Sí{{else}}No{{/if}}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Incendio parcial: {{#if
+              consecuencias.incendioParcial}}Sí{{else}}No{{/if}}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Incendio total: {{#if
+              consecuencias.incendioTotal}}Sí{{else}}No{{/if}}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Robo parcial: {{#if consecuencias.roboParcial}}Sí{{else}}No{{/if}}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Robo total: {{#if consecuencias.roboTotal}}Sí{{else}}No{{/if}}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Robo rueda: {{#if consecuencias.roboRueda}}Sí{{else}}No{{/if}}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Rotura cristales: {{#if
+              consecuencias.roturaCristales}}Sí{{else}}No{{/if}}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Otras consecuencias: {{#if
+              consecuencias.otros}}Sí{{else}}No{{/if}}
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- lugar asistencia -->
+      {{#if lugarAsistencia}}
+      <div class="section">
+        <div class="section-title">LUGAR DE ASISTENCIA</div>
+        <table class="table">
+          <tr>
+            <td>
+              Nombre de centro de asistencia: {{lugarAsistencia.nombreCentro}}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              ¿Queda internado?: {{#if
+              lugarAsistencia.internado}}Sí{{else}}No{{/if}}
+            </td>
+          </tr>
+          <tr>
+            <td>Estado de lesiones: {{lugarAsistencia.estadoLesiones}}</td>
+          </tr>
+          <tr>
+            <td>
+              Descripción de lesiones: {{lugarAsistencia.descripcionLesiones}}
+            </td>
+          </tr>
+        </table>
+      </div>
+      {{/if}}
+      <!--     <div class="notes">
+        <ul>
+          <li>
+            En caso de más lesionados, completar los datos utilizando otro
+            formulario
+          </li>
+          <li>
+            No olvidar que cuando existan lesionados y robo se debe adjuntar la
+            denuncia policial correspondiente.
+          </li>
+          <li>Para coberturas Todo Riesgo se debe coordinar Inspección.</li>
+        </ul>
+      </div> -->
+
+      <!-- Footer -->
+      <!--  <div class="footer">
+        <p>
+          Lisser Group - Asesores de Seguros - info@lissergroup.com.ar - Av.
+          Mendoza 5235 5° Of.128 C.A.B.A. - TEL. 1140703687
+        </p>
+      </div> -->
+    </div>
+  </body>
+</html>
