@@ -76,9 +76,9 @@ export async function getPolizas(aseguradorId, role, { dominio, asegurado, tipoC
     ? { asegurador: new ObjectId(aseguradorId) } 
     : { asegurado: new ObjectId(aseguradorId) };
 
-  if (dominio) {
-    query.dominio = dominio;
-  }
+    if (dominio) {
+      query.dominio = { $regex: `^${dominio}`, $options: 'i' }; 
+    }
 
   if (asegurado) {
     query.asegurado = new ObjectId(asegurado);
