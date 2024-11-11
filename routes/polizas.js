@@ -1,5 +1,5 @@
 import express from "express";
-import { addPoliza, getPolizas,getPolizaDominio, eliminarPoliza, actualizarPoliza } from "../data/poliza.js";
+import { addPoliza, getPolizas,getPolizaDominio, eliminarPoliza, actualizarPoliza, getPolizasAsegurado } from "../data/poliza.js";
 import auth from "../middleware/auth.js";
 import { verificarRolAdministrador, verificarRolAsegurado, verificarRolAsegurador, verificarRolesPrimarios } from "../middleware/roles.js";
 import validarBodyPoliza from "../validaciones/validarBodyPoliza.js";
@@ -62,17 +62,15 @@ polizasRouter.post("/register", auth, verificarRolAsegurador, async (req, res) =
 polizasRouter.get("/list", auth, verificarRolesPrimarios, async (req, res) => {
   try {
     const { _id, role } = req.user;
+    const { dominio, asegurado, tipoCobertura } = req.query;
 
-    const { dominio } = req.query;
-  
-    const result = await getPolizas(_id, role, {dominio});
-    
+    const result = await getPolizas(_id, role, { dominio: dominio?.toUpperCase(), asegurado, tipoCobertura });
+
     res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error.message);
   }
 });
-
 //Listar todas las polizas del asegurado
 polizasRouter.get("/listAsegurado/:id", auth, async (req, res) => {
   try {
@@ -82,8 +80,10 @@ polizasRouter.get("/listAsegurado/:id", auth, async (req, res) => {
     }
     const aseguradoId = req.params.id; 
     const result = await getPolizasAsegurado(aseguradoId); 
+    console.log("2asd0");
     res.status(200).send(result);
   } catch (error) {
+    console.log(error);
     res.status(500).send(error.message);
   }
 });

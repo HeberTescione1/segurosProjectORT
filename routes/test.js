@@ -15,6 +15,7 @@ testRouter.post("/validateToken", (req, res) => {
 
   jwt.verify(token, process.env.CLAVE_SECRETA, (err) => {
     if (err) {
+      console.log(err);
       return res.status(403).json({ valid: false });
     }
     res.json({ valid: true });

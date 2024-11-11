@@ -1,7 +1,7 @@
 //FALTA IMPLEMENTAR.
 const ROLE_ASEGURADO = "asegurado"; 
 const ROLE_ASEGURADOR = "asegurador"; 
-const ROLE_ADMINISTRADOR = "administrador";
+const ROLE_ADMINISTRADOR = "admin";
 
 export const verificarRolAsegurado = (req, res, next) => {
   const { role } = req.user;
