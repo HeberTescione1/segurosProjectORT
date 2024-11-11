@@ -55,6 +55,7 @@ const MSG_ERROR_DIFFERENT_PASSWORDS = "Las contraseñas no son iguales."
 const MSG_SUCCESSFUL_CHANGE = "Contraseña cambiada con exito."
 
 //no se donde se usa esto. verificar.
+// yo lo uso
 usersRouter.get("/buscarCliente/:id", async (req, res) => {
   try {
     const user = await getUserById(req.params.id);
