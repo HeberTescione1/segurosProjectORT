@@ -64,7 +64,7 @@ polizasRouter.get("/list", auth, verificarRolesPrimarios, async (req, res) => {
     const { _id, role } = req.user;
     const { dominio, asegurado, tipoCobertura } = req.query;
 
-    const result = await getPolizas(_id, role, { dominio, asegurado, tipoCobertura });
+    const result = await getPolizas(_id, role, { dominio: dominio?.toUpperCase(), asegurado, tipoCobertura });
 
     res.status(200).send(result);
   } catch (error) {
