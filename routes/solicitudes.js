@@ -5,6 +5,7 @@ import validarSolicitud from "../validaciones/validaciones.js";
 import validarDuenio  from "../validaciones/validarDuenio.js";
 
 import {getSolicitudes, crearSolicitud, getSolicitud } from "../data/solicitud.js"
+import { getPolizaDominio } from "../data/poliza.js";
 
 const MSG_ERROR_VALIDACION = "Debe especificar todos los campos.";
 const MSG_ERROR_401 = "No tiene permisos para realizar esta acción.";
@@ -28,7 +29,26 @@ solicitudesRouter.post("/send",
     //console.log(req.body);
     
     try {
-        const result = await crearSolicitud(req.body)
+        
+        const solicitud = req.body
+        const dominioSolicitud = solicitud?.propietarioAsegurado?.vehiculo?.datosVehiculo?.dominio;
+
+        if (dominioSolicitud) {
+            console.log("Dominio del vehículo:", dominioSolicitud);
+        } else {
+            console.log("No se pudo encontrar el dominio del vehículo.");
+        }
+        
+
+        if(req.body.datosSiniestro.lugarAsistencia == undefined){
+            req.body.datosSiniestro.lugarAsistencia = null
+        }  
+        
+
+        const poliza = await getPolizaDominio(dominioSolicitud)
+
+        solicitud.idPoliza = poliza._id
+        const result = await crearSolicitud(solicitud)
         res.status(201).send(result);    
     } catch (error) {
         console.log(error.message);
