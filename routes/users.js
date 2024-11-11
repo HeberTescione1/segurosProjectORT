@@ -146,7 +146,6 @@ usersRouter.post(
       if (validationError) {
         return res.status(422).send(validationError);
       }
-
       const {
         email,
         name,

@@ -35,8 +35,6 @@ async function buscarAseguradoPorDni(clientmongo, dni) {
   .db(DATABASE)
   .collection(COLECCTION_USERS)
   .findOne({ dni: dni });
-
-  console.log(asegurado);
   
   if (!asegurado) {
     throw new Error("No existe el asegurado");
