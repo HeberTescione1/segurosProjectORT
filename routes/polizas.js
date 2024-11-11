@@ -71,7 +71,6 @@ polizasRouter.get("/list", auth, verificarRolesPrimarios, async (req, res) => {
     res.status(500).send(error.message);
   }
 });
-
 //Listar todas las polizas del asegurado
 polizasRouter.get("/listAsegurado/:id", auth, async (req, res) => {
   try {

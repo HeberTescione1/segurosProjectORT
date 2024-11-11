@@ -92,14 +92,28 @@ export async function getPolizas(aseguradorId, role, { dominio, asegurado, tipoC
     query._id = new ObjectId(polizaId);
   }
 
-  console.log("ss", query);
-
-  return clientmongo
+  const polizas = await clientmongo
     .db(DATABASE)
     .collection(COLECCTION_POLIZAS)
     .find(query)
     .toArray();
-};
+
+  const polizasWithClientNames = await Promise.all(polizas.map(async (poliza) => {
+    const cliente = await clientmongo
+      .db(DATABASE)
+      .collection(COLECCTION_USERS)
+      .findOne({ _id: new ObjectId(poliza.asegurado) });
+
+    return {
+      ...poliza,
+      aseguradoName: cliente ? cliente.name : "Cliente no encontrado",
+      aseguradoLastName: cliente ? cliente.lastname : "Cliente no encontrado",
+    };
+  }));
+
+  return polizasWithClientNames;
+}
+
 export async function getPolizaDominio(dominio) {
   
   const client = await getConnection();
