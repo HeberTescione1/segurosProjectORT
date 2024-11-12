@@ -47,12 +47,13 @@ const MSG_ERROR_EMAIL_INVALIDO =
 const ROLE_ASEGURADOR = "asegurador";
 const ROLE_ASEGURADO = "asegurado";
 const ROLE_ADMIN = "admin";
-const CLIENTE_ACTIVO = "ACTIVO"
-const CLIENTE_INACTIVO = "INACTIVO"
-const MSG_CHECK_EMAIL = "Revise su correo electronico. :"
-const MSG_ERROR_INVALID_PERMISSIONS = "No tienes permiso para realizar esta accion."
-const MSG_ERROR_DIFFERENT_PASSWORDS = "Las contraseñas no son iguales."
-const MSG_SUCCESSFUL_CHANGE = "Contraseña cambiada con exito."
+const CLIENTE_ACTIVO = "ACTIVO";
+const CLIENTE_INACTIVO = "INACTIVO";
+const MSG_CHECK_EMAIL = "Revise su correo electronico. :";
+const MSG_ERROR_INVALID_PERMISSIONS =
+  "No tienes permiso para realizar esta accion.";
+const MSG_ERROR_DIFFERENT_PASSWORDS = "Las contraseñas no son iguales.";
+const MSG_SUCCESSFUL_CHANGE = "Contraseña cambiada con exito.";
 
 //no se donde se usa esto. verificar.
 // yo lo uso
@@ -260,7 +261,7 @@ usersRouter.post("/register", async (req, res) => {
     }
     res.status(201).send(result);
   } catch (error) {
-    res.status(500).send(error.message);
+    res.status(500).send({ error: error.message });
   }
 });
 
@@ -298,7 +299,6 @@ usersRouter.post("/login", acceso, async (req, res) => {
   }
 });
 
-
 usersRouter.get(
   "/getAseguradores",
   auth,
@@ -327,8 +327,12 @@ usersRouter.put(
       if (!aseguradorExiste) {
         return res.status(404).send({ error: "El usuario no existe." });
       }
-      if(aseguradorExiste.role !== "asegurador"){
-        return res.status(404).send({ error: "El usuario al que intento acceder no es asegurador"});
+      if (aseguradorExiste.role !== "asegurador") {
+        return res
+          .status(404)
+          .send({
+            error: "El usuario al que intento acceder no es asegurador",
+          });
       }
 
       const result = await changeState(aseguradorExiste, newState);
@@ -340,47 +344,46 @@ usersRouter.put(
 );
 
 usersRouter.post("/resetPassword/:email", async (req, res) => {
-  const email = req.params.email
+  const email = req.params.email;
 
-try {
-  const user = await mailExist(email)
+  try {
+    const user = await mailExist(email);
 
-  const token = await generateTokenResetPass(user);
-  const resetLink = `http://localhost:3001//editarContrasenia/cambiarContrasenia?token=${token}`
-  console.log(resetLink);
-  
+    const token = await generateTokenResetPass(user);
+    const resetLink = `http://localhost:3001//editarContrasenia/cambiarContrasenia?token=${token}`;
+    console.log(resetLink);
 
-  //TODO
-  //enviar el mail con el link para resetear la password
+    //TODO
+    //enviar el mail con el link para resetear la password
 
-  res.status(200).send({ message: `${MSG_CHECK_EMAIL} ${resetLink}` });
-} catch (error) {
-  res.status(401).send({ error: error.message })
-}
-})
+    res.status(200).send({ message: `${MSG_CHECK_EMAIL} ${resetLink}` });
+  } catch (error) {
+    res.status(401).send({ error: error.message });
+  }
+});
 
 usersRouter.post("/changePassword", auth, async (req, res) => {
   const { _id } = req.user;
-  const id = _id.toString()
-  
-  const {oldPass ,newPass, confirmPassword} = req.body
+  const id = _id.toString();
+
+  const { oldPass, newPass, confirmPassword } = req.body;
 
   try {
     if (!validarDuenio(id, req)) {
       return res.status(403).json({ error: MSG_ERROR_INVALID_PERMISSIONS });
     }
 
-    if(newPass !== confirmPassword){
-      throw new Error(MSG_ERROR_DIFFERENT_PASSWORDS)
+    if (newPass !== confirmPassword) {
+      throw new Error(MSG_ERROR_DIFFERENT_PASSWORDS);
     }
 
-    if(!await validateOldPassword(id, oldPass, newPass)){
-      throw new Error("Contaseña antigua incorrecta.")
+    if (!(await validateOldPassword(id, oldPass, newPass))) {
+      throw new Error("Contaseña antigua incorrecta.");
     }
 
-    await changePassword(newPass , id)
+    await changePassword(newPass, id);
 
-    res.status(200).send({message: MSG_SUCCESSFUL_CHANGE})
+    res.status(200).send({ message: MSG_SUCCESSFUL_CHANGE });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
