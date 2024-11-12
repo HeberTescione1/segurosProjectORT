@@ -16,6 +16,7 @@ import {
   changePassword,
   addAsegurador,
   getAseguradores,
+  updatePerfil,
 } from "../data/user.js";
 import auth from "../middleware/auth.js";
 import validator from "validator";
@@ -31,7 +32,10 @@ import {
   verificarRolAsegurador,
   verificarRolAdministrador,
 } from "../middleware/roles.js";
-import validarBodyCliente from "../validaciones/validarBodyCliente.js";
+import {
+  validarBodyCliente,
+  validarBodyEditPerfil,
+} from "../validaciones/validarBodyCliente.js";
 import validarAsegurador from "../validaciones/validarAsegurador.js";
 import validarAseguradorCorrecto from "../validaciones/validarAseguradorCorrecto.js";
 import validarDuenio from "../validaciones/validarDuenio.js";
@@ -47,12 +51,13 @@ const MSG_ERROR_EMAIL_INVALIDO =
 const ROLE_ASEGURADOR = "asegurador";
 const ROLE_ASEGURADO = "asegurado";
 const ROLE_ADMIN = "admin";
-const CLIENTE_ACTIVO = "ACTIVO"
-const CLIENTE_INACTIVO = "INACTIVO"
-const MSG_CHECK_EMAIL = "Revise su correo electronico. :"
-const MSG_ERROR_INVALID_PERMISSIONS = "No tienes permiso para realizar esta accion."
-const MSG_ERROR_DIFFERENT_PASSWORDS = "Las contraseñas no son iguales."
-const MSG_SUCCESSFUL_CHANGE = "Contraseña cambiada con exito."
+const CLIENTE_ACTIVO = "ACTIVO";
+const CLIENTE_INACTIVO = "INACTIVO";
+const MSG_CHECK_EMAIL = "Revise su correo electronico. :";
+const MSG_ERROR_INVALID_PERMISSIONS =
+  "No tienes permiso para realizar esta accion.";
+const MSG_ERROR_DIFFERENT_PASSWORDS = "Las contraseñas no son iguales.";
+const MSG_SUCCESSFUL_CHANGE = "Contraseña cambiada con exito.";
 
 //no se donde se usa esto. verificar.
 // yo lo uso
@@ -63,6 +68,70 @@ usersRouter.get("/buscarCliente/:id", async (req, res) => {
       return res.status(404).send({ error: "User not found" });
     }
     res.status(200).send(user);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
+usersRouter.get("/getDatosPerfil", auth, async (req, res) => {
+  try {
+    const { _id } = req.user;
+    const user = await getUserById(_id);
+    if (!user) {
+      return res.status(404).send({ error: "User not found" });
+    }
+    const userMapped = {
+      email: user.email,
+      name: user.name,
+      lastname: user.lastname,
+      dni: user.dni,
+      phone: user.phone,
+      date_of_birth: user.date_of_birth,
+      address: user.domicile.address,
+      number: user.domicile.number,
+      floor: user.domicile.floor,
+      apartment: user.domicile.apartment,
+      zip_code: user.domicile.zip_code,
+    };
+    res.status(200).send(userMapped);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
+usersRouter.put("/editarPerfil", auth, async (req, res) => {
+  try {
+    console.log(req.body);
+    const { phone, address, zip_code, number, apartment, floor } = req.body;
+    const validationError = validarBodyEditPerfil({
+      phone,
+      address,
+      zip_code,
+      number,
+      apartment,
+      floor,
+    });
+    if (validationError) {
+      return res.status(422).send(validationError);
+    }
+    const userMapper = {
+      phone,
+      address,
+      zip_code,
+      number,
+      apartment,
+      floor,
+    };
+
+    const result = await updatePerfil(req.user._id, userMapper);
+    console.log(result);
+    if (!result) {
+      return res
+        .status(404)
+        .send({ error: "No se ha modificado ningun parametro del perfil." });
+    }
+
+    res.status(200).send(result);
   } catch (error) {
     res.status(500).send({ error: error.message });
   }
@@ -298,7 +367,6 @@ usersRouter.post("/login", acceso, async (req, res) => {
   }
 });
 
-
 usersRouter.get(
   "/getAseguradores",
   auth,
@@ -327,8 +395,10 @@ usersRouter.put(
       if (!aseguradorExiste) {
         return res.status(404).send({ error: "El usuario no existe." });
       }
-      if(aseguradorExiste.role !== "asegurador"){
-        return res.status(404).send({ error: "El usuario al que intento acceder no es asegurador"});
+      if (aseguradorExiste.role !== "asegurador") {
+        return res.status(404).send({
+          error: "El usuario al que intento acceder no es asegurador",
+        });
       }
 
       const result = await changeState(aseguradorExiste, newState);
@@ -340,48 +410,46 @@ usersRouter.put(
 );
 
 usersRouter.post("/resetPassword/:email", async (req, res) => {
-  const email = req.params.email
+  const email = req.params.email;
 
-try {
-  const user = await mailExist(email)
+  try {
+    const user = await mailExist(email);
 
-  const token = await generateTokenResetPass(user);
-  const resetLink = `http://localhost:3000/recuperarContrasenia?token=${token}`
+    const token = await generateTokenResetPass(user);
+    const resetLink = `http://localhost:3000/recuperarContrasenia?token=${token}`;
 
-  //TODO
-  //enviar el mail con el link para resetear la password
+    //TODO
+    //enviar el mail con el link para resetear la password
 
-  res.status(200).send({ message: `${MSG_CHECK_EMAIL} ${resetLink}` });
-} catch (error) {
-  res.status(401).send({ error: error.message })
-}
-
-
-})
+    res.status(200).send({ message: `${MSG_CHECK_EMAIL} ${resetLink}` });
+  } catch (error) {
+    res.status(401).send({ error: error.message });
+  }
+});
 
 usersRouter.post("/changePassword/:token", auth, async (req, res) => {
-  const user = await getUserByToken(req.params.token)
+  const user = await getUserByToken(req.params.token);
   const { _id } = user;
-  const id = _id.toString()
-  
-  const {oldPass ,newPass, confirmPassword} = req.body
+  const id = _id.toString();
+
+  const { oldPass, newPass, confirmPassword } = req.body;
 
   try {
     if (!validarDuenio(id, req)) {
       return res.status(403).json({ error: MSG_ERROR_INVALID_PERMISSIONS });
     }
 
-    if(newPass !== confirmPassword){
-      throw new Error(MSG_ERROR_DIFFERENT_PASSWORDS)
+    if (newPass !== confirmPassword) {
+      throw new Error(MSG_ERROR_DIFFERENT_PASSWORDS);
     }
 
-    if(!await validateOldPassword(id, oldPass, newPass)){
-      throw new Error("Contaseña antigua incorrecta.")
+    if (!(await validateOldPassword(id, oldPass, newPass))) {
+      throw new Error("Contaseña antigua incorrecta.");
     }
 
-    await changePassword(newPass , id)
+    await changePassword(newPass, id);
 
-    res.status(200).send({message: MSG_SUCCESSFUL_CHANGE})
+    res.status(200).send({ message: MSG_SUCCESSFUL_CHANGE });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
