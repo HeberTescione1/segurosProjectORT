@@ -39,6 +39,7 @@ import {
 import validarAsegurador from "../validaciones/validarAsegurador.js";
 import validarAseguradorCorrecto from "../validaciones/validarAseguradorCorrecto.js";
 import validarDuenio from "../validaciones/validarDuenio.js";
+import { enviarLinkRecuperacion } from "../utils/contrasenias.js";
 
 const usersRouter = express.Router();
 const MSG_ERROR_409 =
@@ -450,6 +451,8 @@ usersRouter.post("/changePassword/:token", auth, async (req, res) => {
 
     //TODO
     //enviar el mail con el link para resetear la password
+
+    await enviarLinkRecuperacion(user._id, resetLink)
 
     res.status(200).send({ message: `${MSG_CHECK_EMAIL} ${resetLink}` });
   } catch (error) {
