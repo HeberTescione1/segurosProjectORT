@@ -28,7 +28,7 @@ import {
   getConsecuenciasDelSiniestro,
   getLugarAsistencia,
 } from "../utils/datosSolicitudes.js";
-import { verificarRolAdministrador, verificarRolAsegurado } from "../middleware/roles.js";
+import { verificarRolAsegurado, verificarRolAsegurador } from "../middleware/roles.js";
 import {enviarNotificacionesAPartes } from "../utils/solicitud.js"
 
 const MSG_ERROR_VALIDACION = "Debe especificar todos los campos.";
@@ -132,14 +132,14 @@ solicitudesRouter.get("/buscarSolicitud", auth, async (req, res) => {
   }
 });
 
-solicitudesRouter.get("/getSolicitudPdf/:id", auth, verificarRolAdministrador, async (req, res) => {
+solicitudesRouter.get("/getSolicitudPdf/:id", auth, verificarRolAsegurador, async (req, res) => {
   try {
     const solicitud = await getSolicitud(req.params.id);
-     if (!validarDuenio(solicitud.idAsegurado, req)) {
-        return res
-          .status(403)
-          .send({error:"No tienes permiso para acceder a esta solicitud"});
-      }
+    //  if (!validarDuenio(solicitud.idAsegurado, req)) {
+    //     return res
+    //       .status(403)
+    //       .send({error:"No tienes permiso para acceder a esta solicitud"});
+    //   }
 
     const datosSiniestro = getDatosDelSiniestro(solicitud);
     const informacionAdicional = getInformacionAdicional(solicitud);

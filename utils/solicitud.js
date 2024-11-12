@@ -5,7 +5,7 @@ export async function enviarNotificacionesAPartes(idAsegurado, idAsegurador) {
   const asegurado = await getUserById(idAsegurado);
   const asegurador = await getUserById(idAsegurador);
   const emailDataAsegurado = {
-    email: asegurado.email,
+    to: asegurado.email,
     subject: "Solicitud ingresada",
     template: "solicitudIngreso",
     params: {
@@ -13,7 +13,7 @@ export async function enviarNotificacionesAPartes(idAsegurado, idAsegurador) {
     },
   };
   const emailDataAsegurador = {
-    email: asegurador.email,
+    to: asegurador.email,
     subject: "Nueva solicitud ingresada",
     template: "notificacionAsegurador",
     params: {
