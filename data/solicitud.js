@@ -1,9 +1,10 @@
 import getConnection from "./connection.js";
 import { ObjectId } from "mongodb";
+import { getUserById } from "./user.js";
+import { sendEmailToExternalAPI } from "../utils/mails.js";
 
 const DATABASE = process.env.DATABASE;
 const COLECCTION_SOLICITUDES = process.env.SOLICITUDES_COLECCTION;
-
 
 export async function getSolicitudes(_id, role, filtros = {}) {
   const client = await getConnection();
@@ -57,16 +58,60 @@ export async function getSolicitud(_id) {
 
 export async function modificarEstadoSolicitud(_id, nuevoEstado) {
   try {
-      const client = await getConnection();
-      const result = await client
-          .db(DATABASE)
-          .collection(COLECCTION_SOLICITUDES)
-          .updateOne({ _id: new ObjectId(_id) }, { $set: { "estado": nuevoEstado } });
-      return result;
+    const client = await getConnection();
+    const result = await client
+      .db(DATABASE)
+      .collection(COLECCTION_SOLICITUDES)
+      .updateOne({ _id: new ObjectId(_id) }, { $set: { estado: nuevoEstado } });
+    await sendEmailAseguradoNuevoEstado(_id);
+    return result;
   } catch (error) {
-      console.error("Error al actualizar el estado de la solicitud:", error);
-      return null;
+    console.error("Error al actualizar el estado de la solicitud:", error);
+    return null;
   }
+}
+
+async function sendEmailAseguradoNuevoEstado(_id) {
+  const solicitud = await getSolicitud(_id);
+  const asegurador = await getUserById(solicitud.idAsegurado);
+  const emailData = {
+    to: asegurador.email,
+    subject: "Cambio de estado en su solicitud",
+    template: "cambioEstadoSolicitud",
+    params: {
+      aseguradoName: `${asegurador.lastname}, ${asegurador.name}`,
+      nroSolicitud: solicitud._id,
+      nuevoEstado: solicitud.estado,
+    },
+  };
+  sendEmailToExternalAPI(emailData);
+}
+
+export async function tieneSolicitudesPendientes(polizaId) {
+  const clientmongo = await getConnection();
+  const solicitudesPendientes = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION_SOLICITUDES)
+    .find({ idPoliza: new ObjectId(polizaId), estado: "PENDIENTE" })
+    .toArray(); 
+  return solicitudesPendientes.length > 0;
+}
+
+
+async function sendEmailAseguradoNuevoEstado(_id) {
+  const solicitud = await getSolicitud(_id);
+  const asegurador = await getUserById(solicitud.idAsegurado);
+  const emailData = {
+    to: asegurador.email,
+    subject: "Cambio de estado en su solicitud",
+    template: "cambioEstadoSolicitud",
+    params: {
+      aseguradoName: `${asegurador.lastname}, ${asegurador.name}`,
+      nroSolicitud: solicitud._id,
+      nuevoEstado: solicitud.estado,
+    },
+  };
+  sendEmailToExternalAPI(emailData);
 }
 
 export async function tieneSolicitudesPendientes(polizaId) {
@@ -77,4 +122,20 @@ export async function tieneSolicitudesPendientes(polizaId) {
     .find({ idPoliza: new ObjectId(polizaId), estado: "PENDIENTE" })
     .toArray();
   return solicitudesPendientes.length > 0;
+}
+
+async function sendEmailAseguradoNuevoEstado(_id) {
+  const solicitud = await getSolicitud(_id);
+  const asegurador = await getUserById(solicitud.idAsegurado);
+  const emailData = {
+    to: asegurador.email,
+    subject: "Cambio de estado en su solicitud",
+    template: "cambioEstadoSolicitud",
+    params: {
+      aseguradoName: `${asegurador.lastname}, ${asegurador.name}`,
+      nroSolicitud: solicitud._id,
+      nuevoEstado: solicitud.estado,
+    },
+  };
+  sendEmailToExternalAPI(emailData);
 }
