@@ -62,17 +62,15 @@ polizasRouter.post("/register", auth, verificarRolAsegurador, async (req, res) =
 polizasRouter.get("/list", auth, verificarRolesPrimarios, async (req, res) => {
   try {
     const { _id, role } = req.user;
+    const { dominio, asegurado, tipoCobertura } = req.query;
 
-    const { dominio } = req.query;
-  
-    const result = await getPolizas(_id, role, {dominio});
-    
+    const result = await getPolizas(_id, role, { dominio: dominio?.toUpperCase(), asegurado, tipoCobertura });
+
     res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error.message);
   }
 });
-
 //Listar todas las polizas del asegurado
 polizasRouter.get("/listAsegurado/:id", auth, async (req, res) => {
   try {
@@ -80,10 +78,7 @@ polizasRouter.get("/listAsegurado/:id", auth, async (req, res) => {
     if (role !== ROLE_ASEGURADOR) {
       return res.status(401).send({ MSG_ERROR_PERMISOS });
     }
-
     const aseguradoId = req.params.id; 
-    console.log("Asegurado ID:", aseguradoId);
-
     const result = await getPolizasAsegurado(aseguradoId); 
     console.log("2asd0");
     res.status(200).send(result);
@@ -97,7 +92,6 @@ polizasRouter.get("/buscarPolizaPorDominio", auth, async (req,res) =>{
   
   try {
     const {dominio} = req.query
-    console.log(dominio);
     const poliza = await getPolizaDominio(dominio)
 
     res.status(200).send(poliza)
@@ -107,9 +101,6 @@ polizasRouter.get("/buscarPolizaPorDominio", auth, async (req,res) =>{
 })
 
 polizasRouter.delete("/:id", auth, async (req, res) => {
-  console.log("llegoooooo",req.params.id);
-  
-  
   try {
     const { role } = req.user;
     if (role !== ROLE_ASEGURADOR) {
