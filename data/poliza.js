@@ -35,8 +35,6 @@ async function buscarAseguradoPorDni(clientmongo, dni) {
   .db(DATABASE)
   .collection(COLECCTION_USERS)
   .findOne({ dni: dni });
-
-  console.log(asegurado);
   
   if (!asegurado) {
     throw new Error("No existe el asegurado");
@@ -70,27 +68,48 @@ function guardarPoliza(clientmongo, poliza, asegurado) {
     .insertOne(data);
 }
 
-export async function getPolizas(aseguradorId, role, {dominio}, polizaId = null) {
+export async function getPolizas(aseguradorId, role, { dominio, asegurado, tipoCobertura }, polizaId = null) {
   const clientmongo = await getConnection();
   let query = role === "asegurador" 
     ? { asegurador: new ObjectId(aseguradorId) } 
     : { asegurado: new ObjectId(aseguradorId) };
 
-    if(dominio){
-      query.dominio = dominio
+    if (dominio) {
+      query.dominio = { $regex: dominio, $options: 'i' }; 
     }
 
-    if(polizaId){
-      query._id = new ObjectId(polizaId);
-    }
-    
-    console.log("ss", query);
+  if (asegurado) {
+    query.asegurado = new ObjectId(asegurado);
+  }
 
-  return clientmongo
+  if (tipoCobertura) {
+    query.tipoCobertura = tipoCobertura;
+  }
+
+  if (polizaId) {
+    query._id = new ObjectId(polizaId);
+  }
+
+  const polizas = await clientmongo
     .db(DATABASE)
     .collection(COLECCTION_POLIZAS)
     .find(query)
     .toArray();
+
+  const polizasWithClientNames = await Promise.all(polizas.map(async (poliza) => {
+    const cliente = await clientmongo
+      .db(DATABASE)
+      .collection(COLECCTION_USERS)
+      .findOne({ _id: new ObjectId(poliza.asegurado) });
+
+    return {
+      ...poliza,
+      aseguradoName: cliente ? cliente.name : "Cliente no encontrado",
+      aseguradoLastName: cliente ? cliente.lastname : "Cliente no encontrado",
+    };
+  }));
+
+  return polizasWithClientNames;
 }
 
 export async function getPolizaDominio(dominio) {
