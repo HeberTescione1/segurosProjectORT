@@ -7,13 +7,11 @@ const MSG_INVALID_CREDENTIALS = "Credenciales no validas";
 const EXCEPTION_STRATEGY = {
   blocked: () => {
     throw new Error(
-      "Su usuario se encuentra bloqueado, consulte con su administrador."
+      "Su usuario se encuentra bloqueado por seguridad, consulte con su administrador para volver a habilitarlo."
     );
   },
   unverify: () => {
-    throw new Error(
-      "Su usuario esta en proceso de verificación, aguarde la acción de su administrador."
-    );
+    throw new Error("Su usuario esta en proceso de verificación.");
   },
   payment_blocked: () => {
     throw new Error("Su usuario se encuentra bloqueado por falta de pago.");
