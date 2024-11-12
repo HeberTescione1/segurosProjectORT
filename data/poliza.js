@@ -12,9 +12,9 @@ export async function addPoliza(poliza) {
   const polizaExist = await getPolizaDominio(poliza.vehiculo.dominio);
   if (!polizaExist) {
     const asegurado = await buscarAseguradoPorDni(clientmongo, poliza.dni);
-    if (asegurado.estado == "INACTIVO") {
+   /*  if (asegurado.state !== "INACTIVO") {
       throw new Error("El cliente no esta activo.");
-    }
+    } */
     const idAsegurador = new ObjectId(poliza.aseguradorId);
     if(!idAsegurador.equals(asegurado.asegurador)){
       throw new Error("El asegurado no es cliente suyo. No se registra la poliza.");

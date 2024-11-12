@@ -71,21 +71,6 @@ export async function modificarEstadoSolicitud(_id, nuevoEstado) {
   }
 }
 
-async function sendEmailAseguradoNuevoEstado(_id) {
-  const solicitud = await getSolicitud(_id);
-  const asegurador = await getUserById(solicitud.idAsegurado);
-  const emailData = {
-    to: asegurador.email,
-    subject: "Cambio de estado en su solicitud",
-    template: "cambioEstadoSolicitud",
-    params: {
-      aseguradoName: `${asegurador.lastname}, ${asegurador.name}`,
-      nroSolicitud: solicitud._id,
-      nuevoEstado: solicitud.estado,
-    },
-  };
-  sendEmailToExternalAPI(emailData);
-}
 
 export async function tieneSolicitudesPendientes(polizaId) {
   const clientmongo = await getConnection();
@@ -97,32 +82,6 @@ export async function tieneSolicitudesPendientes(polizaId) {
   return solicitudesPendientes.length > 0;
 }
 
-
-async function sendEmailAseguradoNuevoEstado(_id) {
-  const solicitud = await getSolicitud(_id);
-  const asegurador = await getUserById(solicitud.idAsegurado);
-  const emailData = {
-    to: asegurador.email,
-    subject: "Cambio de estado en su solicitud",
-    template: "cambioEstadoSolicitud",
-    params: {
-      aseguradoName: `${asegurador.lastname}, ${asegurador.name}`,
-      nroSolicitud: solicitud._id,
-      nuevoEstado: solicitud.estado,
-    },
-  };
-  sendEmailToExternalAPI(emailData);
-}
-
-export async function tieneSolicitudesPendientes(polizaId) {
-  const clientmongo = await getConnection();
-  const solicitudesPendientes = await clientmongo
-    .db(DATABASE)
-    .collection(COLECCTION_SOLICITUDES)
-    .find({ idPoliza: new ObjectId(polizaId), estado: "PENDIENTE" })
-    .toArray();
-  return solicitudesPendientes.length > 0;
-}
 
 async function sendEmailAseguradoNuevoEstado(_id) {
   const solicitud = await getSolicitud(_id);
