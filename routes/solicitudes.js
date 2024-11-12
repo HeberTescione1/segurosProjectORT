@@ -9,10 +9,9 @@ import fs from "fs";
 import pdf from "html-pdf";
 import handlebars from "handlebars";
 import {modificarEstadoSolicitud} from "../data/solicitud.js";
-
+import { getPolizaDominio } from "../data/poliza.js";
 const __filename = fileURLToPath(import.meta.url); // Definir __filename una vez
 const __dirname = path.dirname(__filename); // Usar __filename para obtener __dirname
-
 import {
   getSolicitudes,
   crearSolicitud,
@@ -69,7 +68,26 @@ solicitudesRouter.post("/send",
     validarSolicitud ,
     async (req, res) => {
     try {
-        const result = await crearSolicitud(req.body)
+        
+        const solicitud = req.body
+        const dominioSolicitud = solicitud?.propietarioAsegurado?.vehiculo?.datosVehiculo?.dominio;
+
+        if (dominioSolicitud) {
+            console.log("Dominio del vehículo:", dominioSolicitud);
+        } else {
+            console.log("No se pudo encontrar el dominio del vehículo.");
+        }
+        
+
+        if(req.body.datosSiniestro.lugarAsistencia == undefined){
+            req.body.datosSiniestro.lugarAsistencia = null
+        }  
+        
+
+        const poliza = await getPolizaDominio(dominioSolicitud)
+
+        solicitud.idPoliza = poliza._id
+        const result = await crearSolicitud(solicitud)
         res.status(201).send(result);    
     } catch (error) {
         res.status(500).send(error.message);

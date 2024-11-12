@@ -37,7 +37,7 @@ const esquemaPersona = Joi.object({
     nombre: Joi.string().required(),
     apellido: Joi.string().required(),
     nombreCompleto: Joi.string().required(),
-    cuit: Joi.number().required(),
+    dni: Joi.number().required(),
     email: Joi.string().email().required(),
     telefono: Joi.number().integer().required(),
     fechaDeNacimiento: Joi.date().required(),
@@ -58,26 +58,6 @@ const esquemaPropietarioAfectado = Joi.object({
     datosPersona: esquemaPersona.required(),
     vehiculoPropietadoAfectado: esquemaVehiculoTercero.required(),
     fechaVencimientoPoliza: Joi.date().required()
-})
-
-const esquemaLesionado = Joi.object({
-    datosPersona : esquemaPersona.required(),
-    estadoCivil: Joi.string().required(),
-    telefonoAlternativo: Joi.number().required()
-})
-
-const esquemaLesiones = Joi.object({
-    lesionado: esquemaLesionado.required(),
-    peatonOCiclista: Joi.boolean().required(),
-    conductorTercero: Joi.boolean().required(),
-    ocupanteTercero: Joi.boolean().required(),
-
-    conductorAsegurado: Joi.boolean().required(),
-    asegurado: Joi.boolean().required(),
-    conductor: Joi.boolean().required(),
-    propietarioVehiculoAsegurado: Joi.boolean().required(),
-    relacionConPropietario: Joi.boolean().required() 
-    
 })
 
 const esquemaConsecuenciaSiniestro = Joi.object({
@@ -103,10 +83,6 @@ const esquemaDatosSiniestro = Joi.object({
     hubieronDaniosPersonales: Joi.boolean().required(),
     hubieronDaniosMateriales: Joi.boolean().required(),
     hubieronTestigos: Joi.boolean().required(),
-    vigencia: Joi.string().required(),
-    cobertura: Joi.string().required(),
-    franquicia: Joi.string().required(),
-    cobranza: Joi.string().required(),
     asistioGrua: Joi.boolean().required(),
     asistioAmbulancia: Joi.boolean().required(),
     asistioBomberos: Joi.boolean().required(),
@@ -149,6 +125,6 @@ export const esquemaSolicitud = Joi.object({
     propietarioAfectado: esquemaPropietarioAfectado.required(),
     conductorAfectado: esquemaConductorAfectado.required(),
     propietarioAsegurado: esquemaPropietarioAsegurado.required(),
-    lesiones: esquemaLesiones.required(),
-    datosSiniestro: esquemaDatosSiniestro.required()
+    datosSiniestro: esquemaDatosSiniestro.required(),
+    campo: Joi.string().valid(""),
 });
