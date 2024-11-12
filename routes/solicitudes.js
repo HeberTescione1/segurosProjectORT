@@ -55,8 +55,26 @@ solicitudesRouter.post("/send", validarSolicitud, async (req, res) => {
   //console.log(req.body);
 
   try {
-    const result = await crearSolicitud(req.body);
-    res.status(201).send(result);
+        const solicitud = req.body
+        const dominioSolicitud = solicitud?.propietarioAsegurado?.vehiculo?.datosVehiculo?.dominio;
+
+        if (dominioSolicitud) {
+            console.log("Dominio del vehículo:", dominioSolicitud);
+        } else {
+            console.log("No se pudo encontrar el dominio del vehículo.");
+        }
+        
+
+        if(req.body.datosSiniestro.lugarAsistencia == undefined){
+            req.body.datosSiniestro.lugarAsistencia = null
+        }  
+        
+
+        const poliza = await getPolizaDominio(dominioSolicitud)
+
+        solicitud.idPoliza = poliza._id
+        const result = await crearSolicitud(solicitud)
+        res.status(201).send(result);  
   } catch (error) {
     console.log(error.message);
 
