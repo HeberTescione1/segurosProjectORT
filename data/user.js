@@ -204,6 +204,29 @@ export async function updateUser(id, user) {
   return result.modifiedCount > 0; // Verifica si se modificó algún documento
 }
 
+export async function updatePerfil(id, user) {
+  const clientmongo = await getConnection();
+  const query = { _id: new ObjectId(id) };
+  const newValues = {
+    $set: {
+      phone: user.phone,
+      domicile: {
+        address: user.address,
+        number: user.number,
+        floor: user.floor,
+        apartment: user.apartment,
+        zip_code: user.zip_code,
+      },
+    },
+  };
+
+  const result = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION)
+    .updateOne(query, newValues);
+  return result.modifiedCount > 0; // Verifica si se modificó algún documento
+}
+
 export async function changeState(user, newState) {
   const transitionKey = `${user.state}_to_${newState}`;
   let transition = null;

@@ -16,7 +16,7 @@ const fieldNames = {
   apartment: `El departamento ${added}`,
 };
 
-function validarBodyCliente(body) {
+export function validarBodyCliente(body) {
   const errors = [];
 
   const requiredFields = [
@@ -132,9 +132,74 @@ function validarBodyCliente(body) {
   return errors.length > 0 ? errors.join("\n") : null;
 }
 
+export function validarBodyEditPerfil(body) {
+  const errors = [];
+  //{phone, address, zip_code, number, apartment, floor}
+  const requiredFields = ["phone", "address", "zip_code", "number"];
+  requiredFields.forEach((field) => {
+    if (!body[field] || body[field].toString().trim() === "") {
+      errors.push(`${fieldNames[field]} es obligatorio.`);
+    }
+  });
+
+  const numericFields = ["number", "zip_code", "phone"];
+  numericFields.forEach((field) => {
+    if (body[field] && !validator.isNumeric(body[field].toString())) {
+      errors.push(`${fieldNames[field]} debe ser numérico.`);
+    }
+    if (body[field] && parseInt(body[field]) <= 0) {
+      errors.push(`${fieldNames[field]} no puede ser negativo.`);
+    }
+  });
+
+  if (body.phone) {
+    if (!validator.isNumeric(body.phone.toString())) {
+      errors.push("El teléfono debe contener solo números.");
+    } else if (body.phone.length < 7 || body.phone.length > 12) {
+      errors.push("El teléfono debe tener entre 7 y 12 dígitos.");
+    }
+    if (parseInt(body.phone) <= 0) {
+      errors.push("El teléfono no puede ser negativo ni 0.");
+    }
+  }
+
+  if (body.apartment) {
+    if (!validator.isAlphanumeric(body.apartment.toString())) {
+      errors.push("El departamento solo puede contener letras y números.");
+    } else if (body.apartment.length > 6) {
+      errors.push("El departamento no puede tener más de 6 caracteres.");
+    }
+  }
+
+  if (body.zip_code) {
+    if (body.zip_code.length !== 4) {
+      errors.push("El código postal debe tener exactamente 4 dígitos.");
+    }
+    if (parseInt(body.zip_code) <= 0) {
+      errors.push("El código postal no puede ser negativo ni 0.");
+    }
+  }
+
+  if (body.address && !/^[a-zA-Z0-9.,'\s]*$/.test(body.address)) {
+    errors.push(
+      "La calle solo puede contener letras, números y los caracteres . , '"
+    );
+  }
+
+  const MAX_FLOOR = 200;
+  if (body.floor) {
+    if (parseInt(body.floor) > MAX_FLOOR) {
+      errors.push(`El piso no puede ser mayor a ${MAX_FLOOR}.`);
+    }
+    if (parseInt(body.floor) < 0) {
+      errors.push("El piso no puede ser negativo.");
+    }
+  }
+
+  return errors.length > 0 ? errors.join("\n") : null;
+}
+
 function capitalizeFirstLetter(str) {
   if (!str) return str;
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
-
-export default validarBodyCliente;

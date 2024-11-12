@@ -16,6 +16,7 @@ import {
   changePassword,
   addAsegurador,
   getAseguradores,
+  updatePerfil,
 } from "../data/user.js";
 import auth from "../middleware/auth.js";
 import validator from "validator";
@@ -31,7 +32,10 @@ import {
   verificarRolAsegurador,
   verificarRolAdministrador,
 } from "../middleware/roles.js";
-import validarBodyCliente from "../validaciones/validarBodyCliente.js";
+import {
+  validarBodyCliente,
+  validarBodyEditPerfil,
+} from "../validaciones/validarBodyCliente.js";
 import validarAsegurador from "../validaciones/validarAsegurador.js";
 import validarAseguradorCorrecto from "../validaciones/validarAseguradorCorrecto.js";
 import validarDuenio from "../validaciones/validarDuenio.js";
@@ -64,6 +68,78 @@ usersRouter.get("/buscarCliente/:id", async (req, res) => {
       return res.status(404).send({ error: "User not found" });
     }
     res.status(200).send(user);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
+usersRouter.get("/getDatosPerfil", auth, async (req, res) => {
+  try {
+    const { _id } = req.user;
+    const user = await getUserById(_id);
+    if (!user) {
+      return res.status(404).send({ error: "User not found" });
+    }
+    const userMapped = {
+      email: user.email,
+      name: user.name,
+      lastname: user.lastname,
+      dni: user.dni,
+      phone: user.phone,
+      date_of_birth: user.date_of_birth,
+      address: user.domicile.address,
+      number: user.domicile.number,
+      floor: user.domicile.floor,
+      apartment: user.domicile.apartment,
+      zip_code: user.domicile.zip_code,
+    };
+    res.status(200).send(userMapped);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
+usersRouter.put("/editarPerfil", auth, async (req, res) => {
+  try {
+    console.log(req.body);
+    let { phone, address, zip_code, number, apartment, floor } = req.body;
+
+    if (apartment === "") {
+      apartment = null;
+    }
+    if (floor === "") {
+      floor = null;
+    }
+
+    const validationError = validarBodyEditPerfil({
+      phone,
+      address,
+      zip_code,
+      number,
+      apartment,
+      floor,
+    });
+    if (validationError) {
+      return res.status(422).send(validationError);
+    }
+    const userMapper = {
+      phone,
+      address,
+      zip_code,
+      number,
+      apartment,
+      floor,
+    };
+
+    const result = await updatePerfil(req.user._id, userMapper);
+    console.log(result);
+    if (!result) {
+      return res
+        .status(404)
+        .send({ error: "No se ha modificado ningun parametro del perfil." });
+    }
+
+    res.status(200).send(result);
   } catch (error) {
     res.status(500).send({ error: error.message });
   }
@@ -328,6 +404,7 @@ usersRouter.put(
         return res.status(404).send({ error: "El usuario no existe." });
       }
       if (aseguradorExiste.role !== "asegurador") {
+
         return res
           .status(404)
           .send({
@@ -345,7 +422,25 @@ usersRouter.put(
 
 usersRouter.post("/resetPassword/:email", async (req, res) => {
   const email = req.params.email;
+  try {
+    const user = await mailExist(email);
 
+    const token = await generateTokenResetPass(user);
+    const resetLink = `http://localhost:3000/recuperarContrasenia?token=${token}`;
+
+    //TODO
+    //enviar el mail con el link para resetear la password
+
+    res.status(200).send({ message: `${MSG_CHECK_EMAIL} ${resetLink}` });
+  } catch (error) {
+    res.status(401).send({ error: error.message });
+  }
+});
+
+usersRouter.post("/changePassword/:token", auth, async (req, res) => {
+  const user = await getUserByToken(req.params.token);
+  const { _id } = user;
+  const id = _id.toString();
   try {
     const user = await mailExist(email);
 
@@ -365,7 +460,6 @@ usersRouter.post("/resetPassword/:email", async (req, res) => {
 usersRouter.post("/changePassword", auth, async (req, res) => {
   const { _id } = req.user;
   const id = _id.toString();
-
   const { oldPass, newPass, confirmPassword } = req.body;
 
   try {
