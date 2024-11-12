@@ -28,6 +28,7 @@ import {
   getConsecuenciasDelSiniestro,
   getLugarAsistencia,
 } from "../utils/datosSolicitudes.js";
+import { verificarRolAdministrador } from "../middleware/roles.js";
 
 const MSG_ERROR_VALIDACION = "Debe especificar todos los campos.";
 const MSG_ERROR_401 = "No tiene permisos para realizar esta acción.";
@@ -110,15 +111,14 @@ solicitudesRouter.get("/buscarSolicitud", auth, async (req, res) => {
   }
 });
 
-solicitudesRouter.get("/getSolicitudPdf/:id", async (req, res) => {
+solicitudesRouter.get("/getSolicitudPdf/:id", auth, verificarRolAdministrador, async (req, res) => {
   try {
     const solicitud = await getSolicitud(req.params.id);
-    //para validar despues
-    /*  if (!validarDuenio(solicitud.idAsegurado, req)) {
+     if (!validarDuenio(solicitud.idAsegurado, req)) {
         return res
           .status(403)
-          .send("No tienes permiso para acceder a esta solicitud");
-      } */
+          .send({error:"No tienes permiso para acceder a esta solicitud"});
+      }
 
     const datosSiniestro = getDatosDelSiniestro(solicitud);
     const informacionAdicional = getInformacionAdicional(solicitud);
@@ -173,7 +173,6 @@ solicitudesRouter.get("/getSolicitudPdf/:id", async (req, res) => {
       stream.pipe(res); // Enviar el PDF al cliente
     });
   } catch (error) {
-    console.error("Error al generar el PDF:", error);
     res.status(500).send("Error al generar el PDF");
   }
 });
