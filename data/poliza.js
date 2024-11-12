@@ -15,6 +15,10 @@ export async function addPoliza(poliza) {
     if (asegurado.estado == "INACTIVO") {
       throw new Error("El cliente no esta activo.");
     }
+    const idAsegurador = new ObjectId(poliza.aseguradorId);
+    if(!idAsegurador.equals(asegurado.asegurador)){
+      throw new Error("El asegurado no es cliente suyo. No se registra la poliza.");
+    }
     if (asegurado) {
       result = await guardarPoliza(clientmongo, poliza, asegurado);
       const emailData = {
