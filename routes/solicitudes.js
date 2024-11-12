@@ -28,7 +28,8 @@ import {
   getConsecuenciasDelSiniestro,
   getLugarAsistencia,
 } from "../utils/datosSolicitudes.js";
-import { verificarRolAdministrador } from "../middleware/roles.js";
+import { verificarRolAdministrador, verificarRolAsegurado } from "../middleware/roles.js";
+import {enviarNotificacionesAPartes } from "../utils/solicitud.js"
 
 const MSG_ERROR_VALIDACION = "Debe especificar todos los campos.";
 const MSG_ERROR_401 = "No tiene permisos para realizar esta acción.";
@@ -52,7 +53,7 @@ solicitudesRouter.get("/list", auth, async (req, res) => {
   }
 });
 
-solicitudesRouter.post("/send", validarSolicitud, async (req, res) => {
+solicitudesRouter.post("/send", auth, verificarRolAsegurado, validarSolicitud, async (req, res) => {
   //console.log(req.body);
 
   try {
@@ -71,10 +72,12 @@ solicitudesRouter.post("/send", validarSolicitud, async (req, res) => {
         }  
         
 
-        const poliza = await getPolizaDominio(dominioSolicitud)
+        const poliza = await getPolizaDominio(dominioSolicitud);
 
         solicitud.idPoliza = poliza._id
-        const result = await crearSolicitud(solicitud)
+        const result = await crearSolicitud(solicitud);
+        //enviar emails
+        await enviarNotificacionesAPartes(solicitud.idAsegurado, solicitud.idAsegurador);
         res.status(201).send(result);  
   } catch (error) {
     console.log(error.message);

@@ -33,10 +33,7 @@ export async function getSolicitudes(_id, role, filtros = {}) {
 }
 
 export async function crearSolicitud(solicitud) {
-  let result = null;
   const client = await getConnection();
-  //TODO VALIDAR QUE LA SOLICITUD NO EXISTA
-
   delete solicitud._id;
 
   return client
