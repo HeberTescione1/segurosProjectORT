@@ -8,7 +8,6 @@ import path from "path";
 import fs from "fs";
 import pdf from "html-pdf";
 import handlebars from "handlebars";
-import validarDuenio  from "../validaciones/validarDuenio.js";
 import {modificarEstadoSolicitud} from "../data/solicitud.js";
 
 const __filename = fileURLToPath(import.meta.url); // Definir __filename una vez
@@ -65,16 +64,6 @@ solicitudesRouter.post("/send", validarSolicitud, async (req, res) => {
     res.status(500).send(error.message);
   }
 });
-    try {
-        const { _id, role } = req.user;
-        const { nombrePropietarioAsegurado, estadoSolicitud, fechaOcurrencia} = req.query;
-
-        const result = await getSolicitudes(_id, role, { nombrePropietarioAsegurado, estadoSolicitud, fechaOcurrencia });
-        res.status(200).send(result);
-    } catch (error) {
-        res.status(500).send(error.message);
-    }
-})
 
 solicitudesRouter.post("/send", 
     validarSolicitud ,
