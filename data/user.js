@@ -14,7 +14,7 @@ import {
 } from "../utils/users.js";
 import { sendEmailToExternalAPI } from "../utils/mails.js";
 
-const MSG_ERROR_INVALID_MAIL = "Mail invalido."
+const MSG_ERROR_INVALID_MAIL = "Mail invalido.";
 
 const DATABASE = process.env.DATABASE;
 const COLECCTION = process.env.USERS_COLECCTION;
@@ -23,21 +23,6 @@ const MAX_ATTEMPS = 3;
 const BLOCKED_STATE = "blocked";
 const MSG_BLOCKED_STATE = "Su usuario ha sido bloqueado por seguridad.";
 const MSG_INVALID_CREDENTIALS = "Credenciales no validas";
-const EXCEPTION_STRATEGY = {
-  blocked: () => {
-    throw new Error(
-      "Su usuario se encuentra bloqueado, consulte con su administrador."
-    );
-  },
-  unverify: () => {
-    throw new Error(
-      "Su usuario esta en proceso de verificación, aguarde la acción de su administrador."
-    );
-  },
-  payment_blocked: () => {
-    throw new Error("Su usuario se encuentra bloqueado por falta de pago.");
-  },
-};
 
 const TRANSITION_STRATEGIES = {
   unverify_to_active: () => {
@@ -77,9 +62,9 @@ export async function getUserByToken(token) {
 
   const { _id } = info;
 
-  const result = await getUserById(_id)
+  const result = await getUserById(_id);
 
-  return result
+  return result;
 }
 
 export async function getUserById(id) {
@@ -274,6 +259,7 @@ export async function changeState(user, newState) {
       returnDocument: "after",
     });
   try {
+    console.log(emailData);
     sendEmailToExternalAPI(emailData);
   } catch (error) {
     console.log(error);
@@ -348,21 +334,20 @@ export async function deleteUser(id) {
 }
 
 export async function mailExist(email) {
-
   const clientmongo = await getConnection();
   const result = await clientmongo
     .db(DATABASE)
     .collection(COLECCTION)
     .findOne({ email: email });
 
-    if(result == null){
-      throw new Error(MSG_ERROR_INVALID_MAIL)
-    }
+  if (result == null) {
+    throw new Error(MSG_ERROR_INVALID_MAIL);
+  }
 
-    return result
+  return result;
 }
 
-export async function changePassword(newPass, id) { 
+export async function changePassword(newPass, id) {
   const clientmongo = await getConnection();
   const newPassHash = await bcryptjs.hash(newPass, 10);
 
@@ -370,12 +355,12 @@ export async function changePassword(newPass, id) {
     .db(DATABASE)
     .collection(COLECCTION)
     .findOneAndUpdate(
-      { _id: new ObjectId(id) }, 
-      { $set: { password: newPassHash } }, 
-      { returnOriginal: true } 
-    );    
+      { _id: new ObjectId(id) },
+      { $set: { password: newPassHash } },
+      { returnOriginal: true }
+    );
 
-    return result  
+  return result;
 }
 
 export async function generateTokenResetPass(user) {
@@ -386,7 +371,6 @@ export async function generateTokenResetPass(user) {
   );
   return token;
 }
-
 
 export async function addAsegurador(userData) {
   const clientmongo = await getConnection();
@@ -399,14 +383,25 @@ export async function addAsegurador(userData) {
     throw new Error("El correo electrónico o DNI ya está en uso.");
   }
   userData.password = await bcryptjs.hash(userData.password, 10);
+  userData.state = "unverify";
   const result = await clientmongo
     .db(DATABASE)
     .collection(COLECCTION)
     .insertOne(userData);
 
+  /* emailData */
+  const emailData = {
+    to: userData.email,
+    subject: "Bienvenida a SegurosOrt",
+    template: "bienvenidaAseguradorNuevo",
+    params: {
+      aseguradorName: `${userData.lastname}, ${userData.name}`,
+    },
+  };
+  sendEmailToExternalAPI(emailData);
+
   return result;
 }
-
 
 export async function getAseguradores(search, dni, email, state) {
   let query = { role: "asegurador" };
@@ -443,4 +438,3 @@ export async function getAseguradores(search, dni, email, state) {
 
   return clients;
 }
-

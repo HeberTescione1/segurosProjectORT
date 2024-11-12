@@ -337,7 +337,7 @@ usersRouter.post("/register", async (req, res) => {
     }
     res.status(201).send(result);
   } catch (error) {
-    res.status(500).send(error.message);
+    res.status(500).send({ error: error.message });
   }
 });
 
@@ -404,9 +404,12 @@ usersRouter.put(
         return res.status(404).send({ error: "El usuario no existe." });
       }
       if (aseguradorExiste.role !== "asegurador") {
-        return res.status(404).send({
-          error: "El usuario al que intento acceder no es asegurador",
-        });
+
+        return res
+          .status(404)
+          .send({
+            error: "El usuario al que intento acceder no es asegurador",
+          });
       }
 
       const result = await changeState(aseguradorExiste, newState);
@@ -419,7 +422,6 @@ usersRouter.put(
 
 usersRouter.post("/resetPassword/:email", async (req, res) => {
   const email = req.params.email;
-
   try {
     const user = await mailExist(email);
 
@@ -439,7 +441,25 @@ usersRouter.post("/changePassword/:token", auth, async (req, res) => {
   const user = await getUserByToken(req.params.token);
   const { _id } = user;
   const id = _id.toString();
+  try {
+    const user = await mailExist(email);
 
+    const token = await generateTokenResetPass(user);
+    const resetLink = `http://localhost:3001//editarContrasenia/cambiarContrasenia?token=${token}`;
+    console.log(resetLink);
+
+    //TODO
+    //enviar el mail con el link para resetear la password
+
+    res.status(200).send({ message: `${MSG_CHECK_EMAIL} ${resetLink}` });
+  } catch (error) {
+    res.status(401).send({ error: error.message });
+  }
+});
+
+usersRouter.post("/changePassword", auth, async (req, res) => {
+  const { _id } = req.user;
+  const id = _id.toString();
   const { oldPass, newPass, confirmPassword } = req.body;
 
   try {

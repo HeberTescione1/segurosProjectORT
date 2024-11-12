@@ -1,3 +1,4 @@
+import { sendEmailToExternalAPI } from "../utils/mails.js";
 import getConnection from "./connection.js";
 import { ObjectId } from "mongodb";
 
@@ -6,41 +7,53 @@ const COLECCTION_USERS = process.env.USERS_COLECCTION;
 const COLECCTION_POLIZAS = process.env.POLIZAS_COLECCTION;
 
 export async function addPoliza(poliza) {
- 
   let result = null;
   const clientmongo = await getConnection();
-  const polizaExist = await getPolizaDominio(
-    poliza.vehiculo.dominio
-  );
+  const polizaExist = await getPolizaDominio(poliza.vehiculo.dominio);
   if (!polizaExist) {
-    const asegurado = await buscarAseguradoPorDni(
-      clientmongo,
-      poliza.dni
-    );
-    if(asegurado.estado == 'INACTIVO'){
+    const asegurado = await buscarAseguradoPorDni(clientmongo, poliza.dni);
+   /*  if (asegurado.state !== "INACTIVO") {
       throw new Error("El cliente no esta activo.");
+    } */
+    const idAsegurador = new ObjectId(poliza.aseguradorId);
+    if(!idAsegurador.equals(asegurado.asegurador)){
+      throw new Error("El asegurado no es cliente suyo. No se registra la poliza.");
     }
     if (asegurado) {
       result = await guardarPoliza(clientmongo, poliza, asegurado);
+      const emailData = {
+        to: asegurado.email,
+        subject: "Alta de poliza",
+        template: "altaPoliza",
+        params: {
+          aseguradoName: `${asegurado.lastname}, ${asegurado.name}`,
+          poliza: poliza
+        },
+      };
+      try {
+        sendEmailToExternalAPI(emailData);
+      } catch (error) {
+        console.log(error);
+      }
     }
-  }else{
+  } else {
     throw new Error("La poliza ya existe");
   }
 
   return result;
 }
 
-async function buscarAseguradoPorDni(clientmongo, dni) { 
+async function buscarAseguradoPorDni(clientmongo, dni) {
   const asegurado = await clientmongo
-  .db(DATABASE)
-  .collection(COLECCTION_USERS)
-  .findOne({ dni: dni });
-  
+    .db(DATABASE)
+    .collection(COLECCTION_USERS)
+    .findOne({ dni: dni });
+
   if (!asegurado) {
     throw new Error("No existe el asegurado");
   }
 
-  return asegurado
+  return asegurado;
 }
 
 function guardarPoliza(clientmongo, poliza, asegurado) {
@@ -68,15 +81,21 @@ function guardarPoliza(clientmongo, poliza, asegurado) {
     .insertOne(data);
 }
 
-export async function getPolizas(aseguradorId, role, { dominio, asegurado, tipoCobertura }, polizaId = null) {
+export async function getPolizas(
+  aseguradorId,
+  role,
+  { dominio, asegurado, tipoCobertura },
+  polizaId = null
+) {
   const clientmongo = await getConnection();
-  let query = role === "asegurador" 
-    ? { asegurador: new ObjectId(aseguradorId) } 
-    : { asegurado: new ObjectId(aseguradorId) };
+  let query =
+    role === "asegurador"
+      ? { asegurador: new ObjectId(aseguradorId) }
+      : { asegurado: new ObjectId(aseguradorId) };
 
-    if (dominio) {
-      query.dominio = { $regex: dominio, $options: 'i' }; 
-    }
+  if (dominio) {
+    query.dominio = { $regex: dominio, $options: "i" };
+  }
 
   if (asegurado) {
     query.asegurado = new ObjectId(asegurado);
@@ -96,29 +115,30 @@ export async function getPolizas(aseguradorId, role, { dominio, asegurado, tipoC
     .find(query)
     .toArray();
 
-  const polizasWithClientNames = await Promise.all(polizas.map(async (poliza) => {
-    const cliente = await clientmongo
-      .db(DATABASE)
-      .collection(COLECCTION_USERS)
-      .findOne({ _id: new ObjectId(poliza.asegurado) });
+  const polizasWithClientNames = await Promise.all(
+    polizas.map(async (poliza) => {
+      const cliente = await clientmongo
+        .db(DATABASE)
+        .collection(COLECCTION_USERS)
+        .findOne({ _id: new ObjectId(poliza.asegurado) });
 
-    return {
-      ...poliza,
-      aseguradoName: cliente ? cliente.name : "Cliente no encontrado",
-      aseguradoLastName: cliente ? cliente.lastname : "Cliente no encontrado",
-    };
-  }));
+      return {
+        ...poliza,
+        aseguradoName: cliente ? cliente.name : "Cliente no encontrado",
+        aseguradoLastName: cliente ? cliente.lastname : "Cliente no encontrado",
+      };
+    })
+  );
 
   return polizasWithClientNames;
 }
 
 export async function getPolizaDominio(dominio) {
-  
   const client = await getConnection();
   const poliza = await client
-  .db(DATABASE)
-  .collection(COLECCTION_POLIZAS)
-  .findOne({dominio: dominio}); 
+    .db(DATABASE)
+    .collection(COLECCTION_POLIZAS)
+    .findOne({ dominio: dominio });
 
   return poliza;
 }
@@ -139,7 +159,6 @@ export async function eliminarPoliza(id) {
     .collection(COLECCTION_POLIZAS)
     .deleteOne({ _id: new ObjectId(id) });
   return result;
-  
 }
 
 export async function actualizarPoliza(id, datosActualizados) {
