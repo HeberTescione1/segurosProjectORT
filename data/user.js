@@ -251,6 +251,7 @@ export async function changeState(user, newState) {
       returnDocument: "after",
     });
   try {
+    console.log(emailData);
     sendEmailToExternalAPI(emailData);
   } catch (error) {
     console.log(error);
