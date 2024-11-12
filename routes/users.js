@@ -80,19 +80,22 @@ usersRouter.get("/getDatosPerfil", auth, async (req, res) => {
     if (!user) {
       return res.status(404).send({ error: "User not found" });
     }
+    console.log(user);
     const userMapped = {
       email: user.email,
       name: user.name,
       lastname: user.lastname,
       dni: user.dni,
-      phone: user.phone,
-      date_of_birth: user.date_of_birth,
-      address: user.domicile.address,
-      number: user.domicile.number,
-      floor: user.domicile.floor,
-      apartment: user.domicile.apartment,
-      zip_code: user.domicile.zip_code,
+      phone: user.phone || "",
+      date_of_birth: user.date_of_birth || "",
+      address: user.domicile?.address || "",
+      number: user.domicile?.number || "",
+      floor: user.domicile?.floor || "",
+      apartment: user.domicile?.apartment || "",
+      zip_code: user.domicile?.zip_code || "",
     };
+
+    console.log(userMapped);
     res.status(200).send(userMapped);
   } catch (error) {
     res.status(500).send({ error: error.message });
@@ -404,12 +407,9 @@ usersRouter.put(
         return res.status(404).send({ error: "El usuario no existe." });
       }
       if (aseguradorExiste.role !== "asegurador") {
-
-        return res
-          .status(404)
-          .send({
-            error: "El usuario al que intento acceder no es asegurador",
-          });
+        return res.status(404).send({
+          error: "El usuario al que intento acceder no es asegurador",
+        });
       }
 
       const result = await changeState(aseguradorExiste, newState);
