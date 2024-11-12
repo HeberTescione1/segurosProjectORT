@@ -3,6 +3,7 @@ import { addPoliza, getPolizas,getPolizaDominio, eliminarPoliza, actualizarPoliz
 import auth from "../middleware/auth.js";
 import { verificarRolAdministrador, verificarRolAsegurado, verificarRolAsegurador, verificarRolesPrimarios } from "../middleware/roles.js";
 import validarBodyPoliza from "../validaciones/validarBodyPoliza.js";
+import { tieneSolicitudesPendientes } from "../data/solicitud.js";
 
 
 const polizasRouter = express.Router();
@@ -13,6 +14,7 @@ const MSG_ERROR_VALIDACION = "Debe especificar todos los campos.";
 const MSG_ERROR_POLIZA_EXISTE = "La poliza ya se encuentra registrada.";
 const MSG_ERROR_PERMISOS = "No tiene permisos para realizar esta acción.";
 const MSG_ERROR_401 = "No tiene permisos para realizar esta acción.";
+const MSG_ERROR_SOLICITUDES_PENDIENTES = "No se puede eliminar la póliza porque tiene solicitudes pendientes.";
 
 
 //middleware de rol asegurador.
@@ -100,13 +102,21 @@ polizasRouter.get("/buscarPolizaPorDominio", auth, async (req,res) =>{
   }
 })
 
+
 polizasRouter.delete("/:id", auth, async (req, res) => {
   try {
     const { role } = req.user;
     if (role !== ROLE_ASEGURADOR) {
       return res.status(401).send({ error: MSG_ERROR_401 });
     }
-    const result = await eliminarPoliza(req.params.id); 
+
+    // Verificar si la póliza tiene solicitudes pendientes
+    const tienePendientes = await tieneSolicitudesPendientes(req.params.id);
+    if (tienePendientes) {
+      return res.status(409).send({ error: MSG_ERROR_SOLICITUDES_PENDIENTES });
+    }
+
+    const result = await eliminarPoliza(req.params.id);
     if (!result) {
       return res.status(404).send({ error: "La poliza no existe." });
     }
@@ -114,8 +124,7 @@ polizasRouter.delete("/:id", auth, async (req, res) => {
   } catch (error) {
     res.status(500).send(error.message);
   }
-  
-})
+});
 
 polizasRouter.put("/:id", auth, async (req, res) => {
   try {

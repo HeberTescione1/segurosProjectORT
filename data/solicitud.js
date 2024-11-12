@@ -68,3 +68,13 @@ export async function modificarEstadoSolicitud(_id, nuevoEstado) {
       return null;
   }
 }
+
+export async function tieneSolicitudesPendientes(polizaId) {
+  const clientmongo = await getConnection();
+  const solicitudesPendientes = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION_SOLICITUDES)
+    .find({ idPoliza: new ObjectId(polizaId), estado: "PENDIENTE" })
+    .toArray();
+  return solicitudesPendientes.length > 0;
+}
