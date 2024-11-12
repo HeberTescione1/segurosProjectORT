@@ -102,7 +102,15 @@ usersRouter.get("/getDatosPerfil", auth, async (req, res) => {
 usersRouter.put("/editarPerfil", auth, async (req, res) => {
   try {
     console.log(req.body);
-    const { phone, address, zip_code, number, apartment, floor } = req.body;
+    let { phone, address, zip_code, number, apartment, floor } = req.body;
+
+    if (apartment === "") {
+      apartment = null;
+    }
+    if (floor === "") {
+      floor = null;
+    }
+
     const validationError = validarBodyEditPerfil({
       phone,
       address,
