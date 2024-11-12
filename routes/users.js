@@ -346,7 +346,9 @@ try {
   const user = await mailExist(email)
 
   const token = await generateTokenResetPass(user);
-  const resetLink = `http://localhost:3000/recuperarContrasenia?token=${token}`
+  const resetLink = `http://localhost:3001//editarContrasenia/cambiarContrasenia?token=${token}`
+  console.log(resetLink);
+  
 
   //TODO
   //enviar el mail con el link para resetear la password
@@ -355,13 +357,10 @@ try {
 } catch (error) {
   res.status(401).send({ error: error.message })
 }
-
-
 })
 
-usersRouter.post("/changePassword/:token", auth, async (req, res) => {
-  const user = await getUserByToken(req.params.token)
-  const { _id } = user;
+usersRouter.post("/changePassword", auth, async (req, res) => {
+  const { _id } = req.user;
   const id = _id.toString()
   
   const {oldPass ,newPass, confirmPassword} = req.body

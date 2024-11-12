@@ -10,9 +10,10 @@ const MSG_SUCCESSFUL_CHANGE = "Contraseña cambiada con exito."
 
 resetPasswordRouter.post("/:token", authReset, async (req, res) => {
     const token = req.params.token;
+    const info = jwt.decode(token);
     const { newPass, confirmPassword } = req.body;
   
-    const info = jwt.decode(token);
+    
     const { _id } = info;
   
     try {
