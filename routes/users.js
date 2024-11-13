@@ -421,7 +421,7 @@ usersRouter.put(
   }
 );
 
-usersRouter.post("/changePassword/:token", auth, async (req, res) => {
+usersRouter.post("/changePassword/:token", async (req, res) => {
   const user = await getUserByToken(req.params.token);
   const { _id } = user;
   const id = _id.toString();
@@ -435,29 +435,7 @@ usersRouter.post("/changePassword/:token", auth, async (req, res) => {
     //TODO
     //enviar el mail con el link para resetear la password
 
-    await enviarLinkRecuperacion(user._id, resetLink)
-
-    res.status(200).send({ message: `${MSG_CHECK_EMAIL} ${resetLink}` });
-  } catch (error) {
-    res.status(401).send({ error: error.message });
-  }
-});
-
-usersRouter.post("/changePassword/:token", auth, async (req, res) => {
-  const user = await getUserByToken(req.params.token);
-  const { _id } = user;
-  const id = _id.toString();
-  try {
-    const user = await mailExist(email);
-
-    const token = await generateTokenResetPass(user);
-    const resetLink = `http://localhost:3001//editarContrasenia/cambiarContrasenia?token=${token}`;
-    console.log(resetLink);
-
-    //TODO
-    //enviar el mail con el link para resetear la password
-
-    await enviarLinkRecuperacion(user._id, resetLink)
+    /*   await enviarLinkRecuperacion(user._id, resetLink) */
 
     res.status(200).send({ message: `${MSG_CHECK_EMAIL} ${resetLink}` });
   } catch (error) {
@@ -488,6 +466,22 @@ usersRouter.post("/changePassword", auth, async (req, res) => {
     res.status(200).send({ message: MSG_SUCCESSFUL_CHANGE });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+usersRouter.post("/resetPassword/:email", async (req, res) => {
+  const email = req.params.email;
+  try {
+    const user = await mailExist(email);
+
+    const token = await generateTokenResetPass(user);
+    const resetLink = `http://localhost:3001/editarContrasenia/cambiarContrasenia?token=${token}`;
+
+    await enviarLinkRecuperacion(user._id, resetLink);
+
+    res.status(200).send({ message: "link generado exitosame" });
+  } catch (error) {
+    res.status(401).send({ error: error.message });
   }
 });
 
