@@ -41,13 +41,13 @@ const ROLE_ASEGURADOR = "asegurado";
 solicitudesRouter.get("/list", auth, async (req, res) => {
   try {
     const { _id, role } = req.user;
-    const { nombrePropietarioAsegurado, estadoSolicitud, fechaOcurrencia } =
+    const { nombrePropietarioAsegurado, estadoSolicitud/* , fechaOcurrencia */ } =
       req.query;
 
     const result = await getSolicitudes(_id, role, {
       nombrePropietarioAsegurado,
       estadoSolicitud,
-      fechaOcurrencia,
+  /*     fechaOcurrencia, */
     });
     res.status(200).send(result);
   } catch (error) {

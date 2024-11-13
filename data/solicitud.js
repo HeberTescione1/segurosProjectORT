@@ -23,13 +23,15 @@ export async function getSolicitudes(_id, role, filtros = {}) {
   if (filtros.estadoSolicitud) {
     query.estado = filtros.estadoSolicitud;
   }
-  if (filtros.fechaOcurrencia) {
+  /* if (filtros.fechaOcurrencia) {
     query["datosSiniestro.fechaOcurrencia"] = {};
     if (filtros.fechaOcurrencia) {
       query["datosSiniestro.fechaOcurrencia"].$gte = filtros.fechaOcurrencia;
     }
-  }
-  return await collection.find(query).toArray();
+  } */
+  const result = await collection.find(query).toArray();
+  console.log(result);
+  return result;
 }
 
 export async function crearSolicitud(solicitud) {
