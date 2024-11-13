@@ -13,8 +13,10 @@ import {
   resetAttempts,
 } from "../utils/users.js";
 import { sendEmailToExternalAPI } from "../utils/mails.js";
+import { eliminarPoliza, getPolizasAsegurado } from "./poliza.js";
+import { eliminarSolicitud, getSolicudesByPoliza } from "./solicitud.js";
 
-const MSG_ERROR_INVALID_MAIL = "Mail invalido.";
+const MSG_ERROR_INVALID_MAIL = "Email invalido.";
 
 const DATABASE = process.env.DATABASE;
 const COLECCTION = process.env.USERS_COLECCTION;
@@ -104,7 +106,7 @@ export async function addUser(userData) {
 
   const emailData = {
     to: userData.email,
-    subject: "Bienvenida a SegurosOrt",
+    subject: "Bienvenido/a a Grupo 5 - Seguros",
     template: "bienvenidaAseguradoNuevo",
     params: {
       aseguradoName: `${userData.lastname}, ${userData.name}`,
@@ -326,6 +328,13 @@ export async function getClientsByAsegurador(
 
 export async function deleteUser(id) {
   const clientmongo = await getConnection();
+  const cliente = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION)
+    .findOne({ _id: new ObjectId(id) });
+  if (cliente) {
+    await eliminarDatosAsociados(cliente);
+  }
   const result = await clientmongo
     .db(DATABASE)
     .collection(COLECCTION)
@@ -356,7 +365,7 @@ export async function changePassword(newPass, id) {
     .collection(COLECCTION)
     .findOneAndUpdate(
       { _id: new ObjectId(id) },
-      { $set: { password: newPassHash } },
+      { $set: { password: newPassHash, state: "active" } },
       { returnOriginal: true }
     );
 
@@ -392,7 +401,7 @@ export async function addAsegurador(userData) {
   /* emailData */
   const emailData = {
     to: userData.email,
-    subject: "Bienvenida a SegurosOrt",
+    subject: "Bienvenido/a a Grupo 5 - Seguros",
     template: "bienvenidaAseguradorNuevo",
     params: {
       aseguradorName: `${userData.lastname}, ${userData.name}`,
@@ -437,4 +446,29 @@ export async function getAseguradores(search, dni, email, state) {
     .toArray();
 
   return clients;
+}
+
+async function eliminarDatosAsociados(cliente) {
+  try {
+    const polizas = await getPolizasAsegurado(cliente._id);
+    const solicitudesPorPoliza = await Promise.all(
+      polizas.map(async (poliza) => {
+        const solicitudes = await getSolicudesByPoliza(poliza._id);
+        return {
+          solicitudes,
+        };
+      })
+    );
+    polizas.map(async (poliza) => {
+      await eliminarPoliza(poliza._id);
+    });
+    solicitudesPorPoliza.map(async (solicitud) => {
+      const solicitudes = solicitud.solicitudes;
+      solicitudes.map(async (solicitud) => {
+        await eliminarSolicitud(solicitud._id);
+      });
+    });
+  } catch (error) {
+    throw new Error("Error al eliminar la información asociado al cliente");
+  }
 }

@@ -50,6 +50,7 @@ export function getDatosPropietarioVehiculoAsegurado(solicitud) {
 
 export function getDatosPropietarioDelOtroVehiculo(solicitud) {
   const datosPersona = solicitud.propietarioAfectado.datosPersona;
+  const nombreCompleto = `${datosPersona.nombre} ${datosPersona.apellido}`;
   const domicilio = datosPersona.domicilio;
   let domicilioConcatenado = domicilio.address;
   if (domicilio.number) {
@@ -64,7 +65,7 @@ export function getDatosPropietarioDelOtroVehiculo(solicitud) {
   const vehiculo = solicitud.propietarioAfectado.vehiculoPropietadoAfectado;
   const marcaModelo = `${vehiculo.datosVehiculo.marca}   ${vehiculo.datosVehiculo.modelo}`;
   return {
-    nombre: datosPersona.nombreCompleto,
+    nombre: nombreCompleto,
     domicilio: domicilioConcatenado,
     cp: domicilio.zip_code,
     dni: datosPersona.dni,

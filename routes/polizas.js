@@ -138,8 +138,12 @@ polizasRouter.put("/:id", auth, async (req, res) => {
     if (polizaExistente.length === 0) {	
       return res.status(404).send({ error: "La póliza no existe." });
     }
-
-    const resultado = await actualizarPoliza(req.params.id, req.body);
+    const dataMapped = {
+      primaSegura: req.body.primaSegura,
+      tipoCobertura: req.body.tipoCobertura,
+      deducible: req.body.deducible,
+    }
+    const resultado = await actualizarPoliza(req.params.id, dataMapped);
     res.status(200).send(resultado);
   } catch (error) {
     res.status(500).send(error.message);

@@ -1,6 +1,7 @@
 import { sendEmailToExternalAPI } from "../utils/mails.js";
 import getConnection from "./connection.js";
 import { ObjectId } from "mongodb";
+import { eliminarSolicitud, getSolicudesByPoliza } from "./solicitud.js";
 
 const DATABASE = process.env.DATABASE;
 const COLECCTION_USERS = process.env.USERS_COLECCTION;
@@ -10,14 +11,21 @@ export async function addPoliza(poliza) {
   let result = null;
   const clientmongo = await getConnection();
   const polizaExist = await getPolizaDominio(poliza.vehiculo.dominio);
+  const identificarExtiste = await getPolizaByIdentificador(
+    poliza.vehiculo.numeroIdentificador
+  );
+  if (identificarExtiste) {
+    throw new Error(
+      "El Número identificador (VIN) ya existe asociado a otro vehículo."
+    );
+  }
   if (!polizaExist) {
     const asegurado = await buscarAseguradoPorDni(clientmongo, poliza.dni);
-   /*  if (asegurado.state !== "INACTIVO") {
-      throw new Error("El cliente no esta activo.");
-    } */
     const idAsegurador = new ObjectId(poliza.aseguradorId);
-    if(!idAsegurador.equals(asegurado.asegurador)){
-      throw new Error("El asegurado no es cliente suyo. No se registra la poliza.");
+    if (!idAsegurador.equals(asegurado.asegurador)) {
+      throw new Error(
+        "El asegurado no es cliente suyo. No se registra la poliza."
+      );
     }
     if (asegurado) {
       result = await guardarPoliza(clientmongo, poliza, asegurado);
@@ -27,7 +35,7 @@ export async function addPoliza(poliza) {
         template: "altaPoliza",
         params: {
           aseguradoName: `${asegurado.lastname}, ${asegurado.name}`,
-          poliza: poliza
+          poliza: poliza,
         },
       };
       try {
@@ -154,6 +162,14 @@ export async function getPolizasAsegurado(aseguradoId) {
 
 export async function eliminarPoliza(id) {
   const clientmongo = await getConnection();
+  const poliza = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION_POLIZAS)
+    .findOne({ _id: new ObjectId(id) });
+  const solicitudes = await getSolicudesByPoliza(poliza._id);
+  solicitudes.map(async (solicitud) => {
+    await eliminarSolicitud(solicitud._id);
+  });
   const result = await clientmongo
     .db(DATABASE)
     .collection(COLECCTION_POLIZAS)
@@ -173,4 +189,14 @@ export async function actualizarPoliza(id, datosActualizados) {
     );
 
   return result;
+}
+
+async function getPolizaByIdentificador(identificador) {
+  const client = await getConnection();
+  const poliza = await client
+    .db(DATABASE)
+    .collection(COLECCTION_POLIZAS)
+    .findOne({ "vehiculo.numeroIdentificador": identificador });
+
+  return poliza;
 }

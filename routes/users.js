@@ -277,7 +277,7 @@ usersRouter.post(
 usersRouter.delete(
   "/:id",
   auth,
-  verificarRolAsegurador || verificarRolAdministrador,
+  verificarRolAsegurador,
   async (req, res) => {
     try {
       const { role } = req.user;
@@ -427,7 +427,6 @@ usersRouter.post("/changePassword/:token", async (req, res) => {
   const id = _id.toString();
   try {
     const user = await mailExist(email);
-
     const token = await generateTokenResetPass(user);
     const resetLink = `http://localhost:3001//editarContrasenia/cambiarContrasenia?token=${token}`;
     console.log(resetLink);
@@ -447,7 +446,6 @@ usersRouter.post("/changePassword", auth, async (req, res) => {
   const { _id } = req.user;
   const id = _id.toString();
   const { oldPass, newPass, confirmPassword } = req.body;
-
   try {
     if (!validarDuenio(id, req)) {
       return res.status(403).json({ error: MSG_ERROR_INVALID_PERMISSIONS });
@@ -473,7 +471,6 @@ usersRouter.post("/resetPassword/:email", async (req, res) => {
   const email = req.params.email;
   try {
     const user = await mailExist(email);
-
     const token = await generateTokenResetPass(user);
     const resetLink = `http://localhost:3001/editarContrasenia/cambiarContrasenia?token=${token}`;
 

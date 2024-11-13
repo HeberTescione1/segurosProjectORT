@@ -68,17 +68,15 @@ export async function modificarEstadoSolicitud(_id, nuevoEstado) {
   }
 }
 
-
 export async function tieneSolicitudesPendientes(polizaId) {
   const clientmongo = await getConnection();
   const solicitudesPendientes = await clientmongo
     .db(DATABASE)
     .collection(COLECCTION_SOLICITUDES)
     .find({ idPoliza: new ObjectId(polizaId), estado: "PENDIENTE" })
-    .toArray(); 
+    .toArray();
   return solicitudesPendientes.length > 0;
 }
-
 
 async function sendEmailAseguradoNuevoEstado(_id) {
   const solicitud = await getSolicitud(_id);
@@ -94,4 +92,22 @@ async function sendEmailAseguradoNuevoEstado(_id) {
     },
   };
   sendEmailToExternalAPI(emailData);
+}
+
+export async function getSolicudesByPoliza(polizaId) {
+  const clientmongo = await getConnection();
+  const solicitudesPendientes = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION_SOLICITUDES)
+    .find({ idPoliza: new ObjectId(polizaId) })
+    .toArray();
+  return solicitudesPendientes;
+}
+export async function eliminarSolicitud(id) {
+  const clientmongo = await getConnection();
+  const result = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION_SOLICITUDES)
+    .deleteOne({ _id: new ObjectId(id) });
+  return result;
 }

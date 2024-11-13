@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 
 const MSG_ERROR_PERMISOS = "No tiene permisos para realizar esta acción.";
-const MSG_ERROR_EXPIRED_TOKEN = "El link a caducado, intentelo nuevamente."
+const MSG_ERROR_EXPIRED_TOKEN = "El link ha caducado, intentelo nuevamente."
 
 async function auth(req, res, next) {
   const authHeader = req.headers['authorization'];
