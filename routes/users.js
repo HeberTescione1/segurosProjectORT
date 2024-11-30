@@ -54,6 +54,7 @@ const MSG_SUCCESSFUL_CHANGE = "Contraseña cambiada con exito.";
 const MSG_USUARIO_NO_ENCONTRADO = "Usuario no encontrado";
 const MSG_NO_MODIFICACION_PERFIL =
   "No se ha modificado ningun parametro del perfil.";
+  
 const MSG_EMAIL_DNI_DUPLICADO =
   "El dni o el mail ya se encuentra registrado en nuestra base de datos.";
 const MSG_ERROR_EDICION_CLIENTE =
