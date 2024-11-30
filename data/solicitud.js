@@ -30,7 +30,6 @@ export async function getSolicitudes(_id, role, filtros = {}) {
     }
   } */
   const result = await collection.find(query).toArray();
-  console.log(result);
   return result;
 }
 
@@ -45,7 +44,6 @@ export async function crearSolicitud(solicitud) {
 }
 
 export async function getSolicitud(_id) {
-  console.log(COLECCTION_SOLICITUDES);
   const client = await getConnection();
   const solicitud = await client
     .db(DATABASE)

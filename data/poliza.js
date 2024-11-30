@@ -49,7 +49,6 @@ export async function addPoliza(poliza) {
       try {
         sendEmailToExternalAPI(emailData);
       } catch (error) {
-        console.log(error);
       }
     }
   } else {

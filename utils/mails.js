@@ -1,8 +1,14 @@
 import axios from "axios";
 
 export function sendEmailToExternalAPI(emailData) {
+  const token = process.env.TOKEN_EMAIL;
   axios
-    .post(process.env.API_SEND_EMAIL, emailData)
+    .post(process.env.API_SEND_EMAIL, emailData, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
     .then((response) => {
       console.log("Email enviado exitosamente", response.data);
     })

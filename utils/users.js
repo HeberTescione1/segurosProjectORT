@@ -23,7 +23,6 @@ export async function getUserByEmail(clientmongo, email) {
     .db(DATABASE)
     .collection(COLECCTION)
     .findOne({ email: email });
-  console.log(user);
   if (!user) {
     throw new Error(MSG_INVALID_CREDENTIALS);
   }

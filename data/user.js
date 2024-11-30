@@ -116,7 +116,6 @@ export async function addUser(userData) {
   try {
     sendEmailToExternalAPI(emailData);
   } catch (error) {
-    console.log(error);
   }
   return result;
 }
@@ -144,7 +143,6 @@ export async function findByCredential(email, password) {
       try {
         sendEmailToExternalAPI(emailData);
       } catch (error) {
-        console.log(error);
       }
       throw new Error(MSG_BLOCKED_STATE);
     } else {
@@ -261,10 +259,8 @@ export async function changeState(user, newState) {
       returnDocument: "after",
     });
   try {
-    console.log(emailData);
     sendEmailToExternalAPI(emailData);
   } catch (error) {
-    console.log(error);
   }
   return result;
 }

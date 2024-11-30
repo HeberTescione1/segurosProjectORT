@@ -83,7 +83,6 @@ usersRouter.get("/getDatosPerfil", auth, async (req, res) => {
     if (!user) {
       return res.status(404).send({ error: MSG_USUARIO_NO_ENCONTRADO });
     }
-    console.log(user);
     const userMapped = {
       email: user.email,
       name: user.name,
@@ -97,8 +96,6 @@ usersRouter.get("/getDatosPerfil", auth, async (req, res) => {
       apartment: user.domicile?.apartment || "",
       zip_code: user.domicile?.zip_code || "",
     };
-
-    console.log(userMapped);
     res.status(200).send(userMapped);
   } catch (error) {
     res.status(500).send({ error: error.message });
@@ -107,7 +104,6 @@ usersRouter.get("/getDatosPerfil", auth, async (req, res) => {
 
 usersRouter.put("/editarPerfil", auth, async (req, res) => {
   try {
-    console.log(req.body);
     let { phone, address, zip_code, number, apartment, floor } = req.body;
 
     if (apartment === "") {
@@ -138,7 +134,6 @@ usersRouter.put("/editarPerfil", auth, async (req, res) => {
     };
 
     const result = await updatePerfil(req.user._id, userMapper);
-    console.log(result);
     if (!result) {
       return res.status(404).send({ error: MSG_NO_MODIFICACION_PERFIL });
     }
@@ -251,7 +246,6 @@ usersRouter.post(
       const result = await addUser(newUser);
       res.status(201).send(result);
     } catch (error) {
-      console.log(error);
       res.status(500).send(error.message);
     }
   }

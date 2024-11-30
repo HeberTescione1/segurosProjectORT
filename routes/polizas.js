@@ -108,10 +108,8 @@ polizasRouter.get("/listAsegurado/:id", auth, async (req, res) => {
     }
     const aseguradoId = req.params.id;
     const result = await getPolizasAsegurado(aseguradoId);
-    console.log("2asd0");
     res.status(200).send(result);
   } catch (error) {
-    console.log(error);
     res.status(500).send(error.message);
   }
 });
@@ -170,7 +168,6 @@ polizasRouter.put("/:id", auth, async (req, res) => {
     res.status(200).send(resultado);
   } catch (error) {
     res.status(500).send(error.message);
-    console.log(error);
   }
 });
 

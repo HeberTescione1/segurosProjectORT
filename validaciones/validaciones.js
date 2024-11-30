@@ -76,8 +76,6 @@ const validarSolicitud = (req, res, next) => {
 
 export const validateOldPassword = async (id, oldPass, newPass) =>{ 
   const user = await getUserById(id)
-  console.log(oldPass);
-  
   const isMatch = await bcryptjs.compare(oldPass, user.password)
   return isMatch
 }
