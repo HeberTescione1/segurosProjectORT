@@ -80,7 +80,7 @@ export async function getUserById(id) {
 
 export async function addUser(userData) {
   const clientmongo = await getConnection();
-  userData.password = await bcryptjs.hash(userData.dni, 10);
+  userData.password = await bcryptjs.hash(`D${userData.dni}!`, 10);
   const estaDuplicado = await checkDuplicateEmailOrDni(
     null,
     userData.email,
@@ -115,8 +115,7 @@ export async function addUser(userData) {
   };
   try {
     sendEmailToExternalAPI(emailData);
-  } catch (error) {
-  }
+  } catch (error) {}
   return result;
 }
 
@@ -142,8 +141,7 @@ export async function findByCredential(email, password) {
       };
       try {
         sendEmailToExternalAPI(emailData);
-      } catch (error) {
-      }
+      } catch (error) {}
       throw new Error(MSG_BLOCKED_STATE);
     } else {
       await updateFailedAttempts(clientmongo, email, newAttempts);
@@ -243,10 +241,11 @@ export async function changeState(user, newState) {
       },
     };
     if (transition.refreshPassword) {
-      const newPassword = Math.random().toString(36).slice(-8);
+       const newPassword = generateSecurePassword();
       const hashedPassword = await bcryptjs.hash(newPassword, 10);
       query.$set.password = hashedPassword;
       emailData.params.newPassword = newPassword;
+      console.log(newPassword);
     }
   } else {
     throw new Error("No existe la transicion de estados que desea realizar.");
@@ -260,8 +259,7 @@ export async function changeState(user, newState) {
     });
   try {
     sendEmailToExternalAPI(emailData);
-  } catch (error) {
-  }
+  } catch (error) {}
   return result;
 }
 
@@ -467,4 +465,34 @@ async function eliminarDatosAsociados(cliente) {
   } catch (error) {
     throw new Error("Error al eliminar la información asociado al cliente");
   }
+}
+
+function generateSecurePassword() {
+  const length = 12;
+  const charset = {
+    uppercase: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    lowercase: "abcdefghijklmnopqrstuvwxyz",
+    numbers: "0123456789",
+    special: "!@#$%^&*()_+[]{}|;:,.<>?",
+  };
+
+  const allCharacters =
+    charset.uppercase + charset.lowercase + charset.numbers + charset.special;
+
+  let password = [
+    charset.uppercase[Math.floor(Math.random() * charset.uppercase.length)],
+    charset.lowercase[Math.floor(Math.random() * charset.lowercase.length)],
+    charset.numbers[Math.floor(Math.random() * charset.numbers.length)],
+    charset.special[Math.floor(Math.random() * charset.special.length)],
+  ];
+
+  for (let i = password.length; i < length; i++) {
+    password.push(
+      allCharacters[Math.floor(Math.random() * allCharacters.length)]
+    );
+  }
+
+  password = password.sort(() => Math.random() - 0.5).join("");
+
+  return password;
 }
