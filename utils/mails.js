@@ -2,7 +2,7 @@ import axios from "axios";
 
 export function sendEmailToExternalAPI(emailData) {
   axios
-    .post("http://localhost:3002/api/emails/sendEmail", emailData)
+    .post(process.env.API_SEND_EMAIL, emailData)
     .then((response) => {
       console.log("Email enviado exitosamente", response.data);
     })

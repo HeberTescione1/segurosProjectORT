@@ -4,7 +4,6 @@ import {
   findByCredential,
   generateAuthToken,
   updateUser,
-  addClient,
   getUserByToken,
   getClientsByAsegurador,
   checkDuplicateEmailOrDni,
@@ -21,14 +20,11 @@ import {
 import auth from "../middleware/auth.js";
 import validator from "validator";
 import {
-  validarContrasena,
   validarBodyRegistro,
-  validarBodySinPassword,
   validateOldPassword,
 } from "../validaciones/validaciones.js";
 import acceso from "../middleware/acceso.js";
 import {
-  verificarRolAsegurado,
   verificarRolAsegurador,
   verificarRolAdministrador,
 } from "../middleware/roles.js";
@@ -36,12 +32,13 @@ import {
   validarBodyCliente,
   validarBodyEditPerfil,
 } from "../validaciones/validarBodyCliente.js";
-import validarAsegurador from "../validaciones/validarAsegurador.js";
 import validarAseguradorCorrecto from "../validaciones/validarAseguradorCorrecto.js";
 import validarDuenio from "../validaciones/validarDuenio.js";
 import { enviarLinkRecuperacion } from "../utils/contrasenias.js";
 
 const usersRouter = express.Router();
+
+//Mensajes
 const MSG_ERROR_409 =
   "El dni o el mail ya se encuentra registrado en nuestra base de datos.";
 const MSG_ERROR_401 = "No tiene permisos para realizar esta acción.";
@@ -49,37 +46,42 @@ const MSG_ERROR_LOGIN_VACIO =
   "Faltan campos obligatorios: se requieren email y contraseña.";
 const MSG_ERROR_EMAIL_INVALIDO =
   "El email proporcionado no tiene formato de email.";
-const ROLE_ASEGURADOR = "asegurador";
-const ROLE_ASEGURADO = "asegurado";
-const ROLE_ADMIN = "admin";
-const CLIENTE_ACTIVO = "ACTIVO";
-const CLIENTE_INACTIVO = "INACTIVO";
 const MSG_CHECK_EMAIL = "Revise su correo electronico. :";
 const MSG_ERROR_INVALID_PERMISSIONS =
   "No tienes permiso para realizar esta accion.";
 const MSG_ERROR_DIFFERENT_PASSWORDS = "Las contraseñas no son iguales.";
 const MSG_SUCCESSFUL_CHANGE = "Contraseña cambiada con exito.";
+const MSG_USUARIO_NO_ENCONTRADO = "Usuario no encontrado";
+const MSG_NO_MODIFICACION_PERFIL =
+  "No se ha modificado ningun parametro del perfil.";
+const MSG_EMAIL_DNI_DUPLICADO =
+  "El dni o el mail ya se encuentra registrado en nuestra base de datos.";
+const MSG_ERROR_EDICION_CLIENTE =
+  "El usuario no existe o no se pudo actualizar.";
+const MSG_ACTUALIZACION_OK = "Usuario actualizado correctamente";
+const MSG_CLIENTE_NO_EXISTE = "El Cliente no existe.";
+const MSG_USUARIO_NO_EXISTE = "El usuario no existe.";
+const MSG_ERROR_PERMISOS_WEB = "No posee permisos para acceder desde una web.";
+const MSG_ERROR_PERMISOS_ANDROID =
+  "No posee permisos para acceder desde un dispositivo Android.";
+const MSG_ERROR_ACCESO_USUARIO =
+  "El usuario al que intento acceder no es asegurador";
+const MSG_ERROR_CONTRASENIA_ANTIGUA = "Contaseña antigua incorrecta.";
+const MSG_LINK_OK = "Link generado exitosame";
 
-//no se donde se usa esto. verificar.
-// yo lo uso
-usersRouter.get("/buscarCliente/:id", async (req, res) => {
-  try {
-    const user = await getUserById(req.params.id);
-    if (!user) {
-      return res.status(404).send({ error: "User not found" });
-    }
-    res.status(200).send(user);
-  } catch (error) {
-    res.status(500).send({ error: error.message });
-  }
-});
+//Roles
+const ROLE_ASEGURADO = "asegurado";
+const ROLE_ASEGURADOR = "asegurador";
+
+//Estados
+const ESTADO_ACTIVO = "active";
 
 usersRouter.get("/getDatosPerfil", auth, async (req, res) => {
   try {
     const { _id } = req.user;
     const user = await getUserById(_id);
     if (!user) {
-      return res.status(404).send({ error: "User not found" });
+      return res.status(404).send({ error: MSG_USUARIO_NO_ENCONTRADO });
     }
     console.log(user);
     const userMapped = {
@@ -138,9 +140,7 @@ usersRouter.put("/editarPerfil", auth, async (req, res) => {
     const result = await updatePerfil(req.user._id, userMapper);
     console.log(result);
     if (!result) {
-      return res
-        .status(404)
-        .send({ error: "No se ha modificado ningun parametro del perfil." });
+      return res.status(404).send({ error: MSG_NO_MODIFICACION_PERFIL });
     }
 
     res.status(200).send(result);
@@ -149,8 +149,6 @@ usersRouter.put("/editarPerfil", auth, async (req, res) => {
   }
 });
 
-//middleware de rol y autentificado
-//falta validar lo que viene en el body
 usersRouter.put(
   "/editarCliente/:id",
   auth,
@@ -164,27 +162,20 @@ usersRouter.put(
       );
       if (duplicate) {
         return res.status(400).send({
-          error:
-            "El dni o el mail ya se encuentra registrado en nuestra base de datos.",
+          error: MSG_EMAIL_DNI_DUPLICADO,
         });
       }
-
       const result = await updateUser(req.params.id, req.body);
       if (!result) {
-        return res
-          .status(404)
-          .send({ error: "El usuario no existe o no se pudo actualizar." });
+        return res.status(404).send({ error: MSG_ERROR_EDICION_CLIENTE });
       }
-
-      res.status(200).send({ message: "Usuario actualizado correctamente" });
+      res.status(200).send({ message: MSG_ACTUALIZACION_OK });
     } catch (error) {
       res.status(500).send({ error: error.message });
     }
   }
 );
 
-//TODO
-//validar que el productor sea prodructor y que sea el productor del usuario
 usersRouter.put(
   "/editarEstado/:id",
   auth,
@@ -196,7 +187,7 @@ usersRouter.put(
 
       const clienteExiste = await getUserById(idAsegurado);
       if (!clienteExiste) {
-        return res.status(404).send({ error: "El Cliente no existe." });
+        return res.status(404).send({ error: MSG_CLIENTE_NO_EXISTE });
       }
 
       if (!validarAseguradorCorrecto(req, clienteExiste.asegurador)) {
@@ -211,11 +202,6 @@ usersRouter.put(
   }
 );
 
-//  Validaciones
-//  email         usuario@dominio.algo
-//  dni           numeros igual o mas de 7 numeros y igual o menos a 8
-//  contraseña    Se setea contraseña "D{dni usuario}!" despues vemos
-//falta validar cuit, domicilio y no se si algo mas.
 usersRouter.post(
   "/register/client",
   auth,
@@ -258,9 +244,9 @@ usersRouter.post(
         phone,
         date_of_birth,
         gender,
-        role: "asegurado",
+        role: ROLE_ASEGURADO,
         asegurador: _id,
-        state: "active",
+        state: ESTADO_ACTIVO,
       };
       const result = await addUser(newUser);
       res.status(201).send(result);
@@ -271,28 +257,19 @@ usersRouter.post(
   }
 );
 
-//no tiene validaciones de campos
-//middleware de autentificado y de rol.
-//FALTA VALIDAR ACA QUE NO BORRE ALGUN CLIENTE U ALGUN OTRO USUARIO DE OTRO LADO.
-usersRouter.delete(
-  "/:id",
-  auth,
-  verificarRolAsegurador,
-  async (req, res) => {
-    try {
-      const { role } = req.user;
-      const result = await deleteUser(req.params.id);
-      if (!result) {
-        return res.status(404).send({ error: "El usuario no existe." });
-      }
-      res.status(200).send(result);
-    } catch (error) {
-      res.status(500).send(error.message);
+usersRouter.delete("/:id", auth, verificarRolAsegurador, async (req, res) => {
+  try {
+    const { role } = req.user;
+    const result = await deleteUser(req.params.id);
+    if (!result) {
+      return res.status(404).send({ error: MSG_USUARIO_NO_EXISTE });
     }
+    res.status(200).send(result);
+  } catch (error) {
+    res.status(500).send(error.message);
   }
-);
+});
 
-//no tiene validaciones de campos
 usersRouter.get("/clients", auth, verificarRolAsegurador, async (req, res) => {
   try {
     const { _id } = req.user;
@@ -312,8 +289,6 @@ usersRouter.get("/clients", auth, verificarRolAsegurador, async (req, res) => {
 
 usersRouter.post("/getInfoByToken", async (req, res) => {
   try {
-    //TODO VALIDAR QUE EL USER EXISTA
-
     const result = await getUserByToken(req.body.token);
 
     res.status(200).send(result);
@@ -322,10 +297,6 @@ usersRouter.post("/getInfoByToken", async (req, res) => {
   }
 });
 
-//  Validaciones
-//  email         usuario@dominio.algo
-//  dni           numeros igual o mas de 7 numeros y igual o menos a 8
-//  contraseña    mayuscula, caracter especial y numero, 8 o mas caracteres
 usersRouter.post("/register", async (req, res) => {
   try {
     const errores = validarBodyRegistro(req.body);
@@ -345,8 +316,6 @@ usersRouter.post("/register", async (req, res) => {
   }
 });
 
-//  Validaciones
-//  email   usuario@dominio.algo
 usersRouter.post("/login", acceso, async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -362,14 +331,12 @@ usersRouter.post("/login", acceso, async (req, res) => {
     }
     const user = await findByCredential(email, password);
 
-    if (user.role === "asegurado" && req.isWeb) {
-      return res
-        .status(403)
-        .send({ error: "No posee permisos para acceder desde una web." });
+    if (user.role === ROLE_ASEGURADO && req.isWeb) {
+      return res.status(403).send({ error: MSG_ERROR_PERMISOS_WEB });
     }
-    if (user.role === "asegurador" && req.isAndroid) {
+    if (user.role === ROLE_ASEGURADOR && req.isAndroid) {
       return res.status(403).send({
-        error: "No posee permisos para acceder desde un dispositivo Android.",
+        error: MSG_ERROR_PERMISOS_ANDROID,
       });
     }
     const token = await generateAuthToken(user);
@@ -405,11 +372,11 @@ usersRouter.put(
 
       const aseguradorExiste = await getUserById(idAsegurador);
       if (!aseguradorExiste) {
-        return res.status(404).send({ error: "El usuario no existe." });
+        return res.status(404).send({ error: MSG_USUARIO_NO_EXISTE });
       }
-      if (aseguradorExiste.role !== "asegurador") {
+      if (aseguradorExiste.role !== ROLE_ASEGURADOR) {
         return res.status(404).send({
-          error: "El usuario al que intento acceder no es asegurador",
+          error: MSG_ERROR_ACCESO_USUARIO,
         });
       }
 
@@ -429,12 +396,6 @@ usersRouter.post("/changePassword/:token", async (req, res) => {
     const user = await mailExist(email);
     const token = await generateTokenResetPass(user);
     const resetLink = `http://localhost:3001//editarContrasenia/cambiarContrasenia?token=${token}`;
-    console.log(resetLink);
-
-    //TODO
-    //enviar el mail con el link para resetear la password
-
-    /*   await enviarLinkRecuperacion(user._id, resetLink) */
 
     res.status(200).send({ message: `${MSG_CHECK_EMAIL} ${resetLink}` });
   } catch (error) {
@@ -456,7 +417,7 @@ usersRouter.post("/changePassword", auth, async (req, res) => {
     }
 
     if (!(await validateOldPassword(id, oldPass, newPass))) {
-      throw new Error("Contaseña antigua incorrecta.");
+      throw new Error(MSG_ERROR_CONTRASENIA_ANTIGUA);
     }
 
     await changePassword(newPass, id);
@@ -476,9 +437,21 @@ usersRouter.post("/resetPassword/:email", async (req, res) => {
 
     await enviarLinkRecuperacion(user._id, resetLink);
 
-    res.status(200).send({ message: "link generado exitosame" });
+    res.status(200).send({ message: MSG_LINK_OK });
   } catch (error) {
     res.status(401).send({ error: error.message });
+  }
+});
+
+usersRouter.get("/buscarCliente/:id", async (req, res) => {
+  try {
+    const user = await getUserById(req.params.id);
+    if (!user) {
+      return res.status(404).send({ error: MSG_USUARIO_NO_ENCONTRADO });
+    }
+    res.status(200).send(user);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
   }
 });
 

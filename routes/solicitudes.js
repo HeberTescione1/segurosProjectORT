@@ -34,20 +34,18 @@ import {
 } from "../middleware/roles.js";
 import { enviarNotificacionesAPartes } from "../utils/solicitud.js";
 
-const MSG_ERROR_VALIDACION = "Debe especificar todos los campos.";
-const MSG_ERROR_401 = "No tiene permisos para realizar esta acción.";
-const ROLE_ASEGURADOR = "asegurado";
+const MSG_ERROR_PERMISOS = "No tienes permiso para acceder a esta solicitud";
+const MSG_ERROR_PDF = "Error al generar el PDF";
+const MSG_SOLICITUD_NO_ENCONTRADA = "Solicitud no encontrada";
 
 solicitudesRouter.get("/list", auth, async (req, res) => {
   try {
     const { _id, role } = req.user;
-    const { nombrePropietarioAsegurado, estadoSolicitud/* , fechaOcurrencia */ } =
-      req.query;
+    const { nombrePropietarioAsegurado, estadoSolicitud } = req.query;
 
     const result = await getSolicitudes(_id, role, {
       nombrePropietarioAsegurado,
       estadoSolicitud,
-  /*     fechaOcurrencia, */
     });
     res.status(200).send(result);
   } catch (error) {
@@ -61,28 +59,16 @@ solicitudesRouter.post(
   verificarRolAsegurado,
   validarSolicitud,
   async (req, res) => {
-    //console.log(req.body);
-
     try {
       const solicitud = req.body;
       const dominioSolicitud =
         solicitud?.propietarioAsegurado?.vehiculo?.datosVehiculo?.dominio;
-
-      if (dominioSolicitud) {
-        console.log("Dominio del vehículo:", dominioSolicitud);
-      } else {
-        console.log("No se pudo encontrar el dominio del vehículo.");
-      }
-
       if (req.body.datosSiniestro.lugarAsistencia == undefined) {
         req.body.datosSiniestro.lugarAsistencia = null;
       }
-
       const poliza = await getPolizaDominio(dominioSolicitud);
-
       solicitud.idPoliza = poliza._id;
       const result = await crearSolicitud(solicitud);
-      //enviar emails
       await enviarNotificacionesAPartes(
         solicitud.idAsegurado,
         solicitud.idAsegurador
@@ -101,19 +87,10 @@ solicitudesRouter.post("/send", validarSolicitud, async (req, res) => {
     const solicitud = req.body;
     const dominioSolicitud =
       solicitud?.propietarioAsegurado?.vehiculo?.datosVehiculo?.dominio;
-
-    if (dominioSolicitud) {
-      console.log("Dominio del vehículo:", dominioSolicitud);
-    } else {
-      console.log("No se pudo encontrar el dominio del vehículo.");
-    }
-
     if (req.body.datosSiniestro.lugarAsistencia == undefined) {
       req.body.datosSiniestro.lugarAsistencia = null;
     }
-
     const poliza = await getPolizaDominio(dominioSolicitud);
-
     solicitud.idPoliza = poliza._id;
     const result = await crearSolicitud(solicitud);
     res.status(201).send(result);
@@ -128,9 +105,7 @@ solicitudesRouter.get("/buscarSolicitud", auth, async (req, res) => {
     const solicitud = await getSolicitud(idSolicitud);
 
     if (!validarDuenio(solicitud.idAsegurado, req)) {
-      return res
-        .status(403)
-        .send("No tienes permiso para acceder a esta solicitud");
+      return res.status(403).send(MSG_ERROR_PERMISOS);
     }
     res.status(200).send(solicitud);
   } catch (error) {
@@ -145,12 +120,6 @@ solicitudesRouter.get(
   async (req, res) => {
     try {
       const solicitud = await getSolicitud(req.params.id);
-      //  if (!validarDuenio(solicitud.idAsegurado, req)) {
-      //     return res
-      //       .status(403)
-      //       .send({error:"No tienes permiso para acceder a esta solicitud"});
-      //   }
-
       const datosSiniestro = getDatosDelSiniestro(solicitud);
       const informacionAdicional = getInformacionAdicional(solicitud);
       const datosPropietarioVehiculoAsegurado =
@@ -193,8 +162,7 @@ solicitudesRouter.get(
 
       pdf.create(filledHtml, options).toStream((err, stream) => {
         if (err) {
-          console.log("Error al generar el PDF:", err);
-          return res.status(500).send("Error al generar el PDF");
+          return res.status(500).send(MSG_ERROR_PDF);
         }
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader(
@@ -204,18 +172,17 @@ solicitudesRouter.get(
         stream.pipe(res);
       });
     } catch (error) {
-      res.status(500).send("Error al generar el PDF");
+      res.status(500).send(MSG_ERROR_PDF);
     }
   }
 );
 
-//endpoint para modificar el estado de una solicitud
 solicitudesRouter.put("/modificarEstado", auth, async (req, res) => {
   try {
     const { idSolicitud, nuevoEstado } = req.body;
     const solicitud = await getSolicitud(idSolicitud);
     if (!solicitud) {
-      return res.status(404).send("Solicitud no encontrada");
+      return res.status(404).send(MSG_SOLICITUD_NO_ENCONTRADA);
     }
 
     const result = await modificarEstadoSolicitud(idSolicitud, nuevoEstado);

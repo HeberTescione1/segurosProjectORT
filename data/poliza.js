@@ -7,6 +7,18 @@ const DATABASE = process.env.DATABASE;
 const COLECCTION_USERS = process.env.USERS_COLECCTION;
 const COLECCTION_POLIZAS = process.env.POLIZAS_COLECCTION;
 
+//Roles
+const ROLE_ASEGURADOR = "asegurador";
+
+//Mensajes
+const MSG_ERROR_VIN =
+  "El Número identificador (VIN) ya existe asociado a otro vehículo.";
+const MSG_ERROR_ASEGURADO =
+  "El asegurado no es cliente suyo. No se registra la poliza.";
+const MSG_ERROR_POLIZA_EXISTE = "La poliza ya existe";
+const MSG_ERROR_ASEGURADO_NO_EXISTE = "No existe el asegurado";
+const MSG_ERROR_CLIENTE_NO_ENCONTRADO = "Cliente no encontrado";
+
 export async function addPoliza(poliza) {
   let result = null;
   const clientmongo = await getConnection();
@@ -15,17 +27,13 @@ export async function addPoliza(poliza) {
     poliza.vehiculo.numeroIdentificador
   );
   if (identificarExtiste) {
-    throw new Error(
-      "El Número identificador (VIN) ya existe asociado a otro vehículo."
-    );
+    throw new Error(MSG_ERROR_VIN);
   }
   if (!polizaExist) {
     const asegurado = await buscarAseguradoPorDni(clientmongo, poliza.dni);
     const idAsegurador = new ObjectId(poliza.aseguradorId);
     if (!idAsegurador.equals(asegurado.asegurador)) {
-      throw new Error(
-        "El asegurado no es cliente suyo. No se registra la poliza."
-      );
+      throw new Error(MSG_ERROR_ASEGURADO);
     }
     if (asegurado) {
       result = await guardarPoliza(clientmongo, poliza, asegurado);
@@ -45,48 +53,10 @@ export async function addPoliza(poliza) {
       }
     }
   } else {
-    throw new Error("La poliza ya existe");
+    throw new Error(MSG_ERROR_POLIZA_EXISTE);
   }
 
   return result;
-}
-
-async function buscarAseguradoPorDni(clientmongo, dni) {
-  const asegurado = await clientmongo
-    .db(DATABASE)
-    .collection(COLECCTION_USERS)
-    .findOne({ dni: dni });
-
-  if (!asegurado) {
-    throw new Error("No existe el asegurado");
-  }
-
-  return asegurado;
-}
-
-function guardarPoliza(clientmongo, poliza, asegurado) {
-  const data = {
-    asegurado: new ObjectId(asegurado._id),
-    asegurador: new ObjectId(poliza.aseguradorId),
-    dominio: poliza.vehiculo.dominio,
-    tipoCobertura: poliza.tipoCobertura,
-    aseguradora: poliza.aseguradora,
-    primaSegura: poliza.primaSegura,
-    deducible: poliza.deducible,
-    vehiculo: {
-      numeroIdentificador: poliza.vehiculo.numeroIdentificador,
-      marca: poliza.vehiculo.marca,
-      modelo: poliza.vehiculo.modelo,
-      anio: poliza.vehiculo.anio,
-      dominio: poliza.vehiculo.dominio,
-      color: poliza.vehiculo.color,
-      tipoVehiculo: poliza.vehiculo.tipoVehiculo,
-    },
-  };
-  return clientmongo
-    .db(DATABASE)
-    .collection(COLECCTION_POLIZAS)
-    .insertOne(data);
 }
 
 export async function getPolizas(
@@ -97,7 +67,7 @@ export async function getPolizas(
 ) {
   const clientmongo = await getConnection();
   let query =
-    role === "asegurador"
+    role === ROLE_ASEGURADOR
       ? { asegurador: new ObjectId(aseguradorId) }
       : { asegurado: new ObjectId(aseguradorId) };
 
@@ -132,8 +102,10 @@ export async function getPolizas(
 
       return {
         ...poliza,
-        aseguradoName: cliente ? cliente.name : "Cliente no encontrado",
-        aseguradoLastName: cliente ? cliente.lastname : "Cliente no encontrado",
+        aseguradoName: cliente ? cliente.name : MSG_ERROR_CLIENTE_NO_ENCONTRADO,
+        aseguradoLastName: cliente
+          ? cliente.lastname
+          : MSG_ERROR_CLIENTE_NO_ENCONTRADO,
       };
     })
   );
@@ -191,6 +163,19 @@ export async function actualizarPoliza(id, datosActualizados) {
   return result;
 }
 
+async function buscarAseguradoPorDni(clientmongo, dni) {
+  const asegurado = await clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION_USERS)
+    .findOne({ dni: dni });
+
+  if (!asegurado) {
+    throw new Error(MSG_ERROR_ASEGURADO_NO_EXISTE);
+  }
+
+  return asegurado;
+}
+
 async function getPolizaByIdentificador(identificador) {
   const client = await getConnection();
   const poliza = await client
@@ -199,4 +184,29 @@ async function getPolizaByIdentificador(identificador) {
     .findOne({ "vehiculo.numeroIdentificador": identificador });
 
   return poliza;
+}
+
+function guardarPoliza(clientmongo, poliza, asegurado) {
+  const data = {
+    asegurado: new ObjectId(asegurado._id),
+    asegurador: new ObjectId(poliza.aseguradorId),
+    dominio: poliza.vehiculo.dominio,
+    tipoCobertura: poliza.tipoCobertura,
+    aseguradora: poliza.aseguradora,
+    primaSegura: poliza.primaSegura,
+    deducible: poliza.deducible,
+    vehiculo: {
+      numeroIdentificador: poliza.vehiculo.numeroIdentificador,
+      marca: poliza.vehiculo.marca,
+      modelo: poliza.vehiculo.modelo,
+      anio: poliza.vehiculo.anio,
+      dominio: poliza.vehiculo.dominio,
+      color: poliza.vehiculo.color,
+      tipoVehiculo: poliza.vehiculo.tipoVehiculo,
+    },
+  };
+  return clientmongo
+    .db(DATABASE)
+    .collection(COLECCTION_POLIZAS)
+    .insertOne(data);
 }
