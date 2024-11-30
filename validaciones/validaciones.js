@@ -70,3 +70,10 @@ const validarSolicitud = (req, res, next) => {
   };
 
   export default validarSolicitud
+
+export const validateOldPassword = async (id, oldPass, newPass) =>{ 
+  const user = await getUserById(id)
+  const isMatch = await bcryptjs.compare(oldPass, user.password)
+  return isMatch
+}
+
