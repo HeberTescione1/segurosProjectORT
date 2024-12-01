@@ -1,5 +1,7 @@
 import validator from "validator";
 import {esquemaSolicitud } from "./esquemas.js";
+import {getUserById} from "../data/user.js"
+import bcryptjs from "bcryptjs";
 
 export function validarContrasena(contrasena) {
   const mayuscula = /[A-Z]/.test(contrasena);
